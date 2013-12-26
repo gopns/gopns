@@ -16,7 +16,7 @@ GPNS provides scalable and efficient a mass push notificaiton service built on t
 ```bash
 mkdir ~/go
 export GOPATH=~/go
-export PATH=$GOPATH/bin
+export PATH=$PATH:$GOPATH/bin
 go get github.com/msbranco/goconfig
 go get code.google.com/p/gorest
 go get github.com/usmanismail/gpns
