@@ -7,8 +7,6 @@ GPNS provides scalable and efficient a mass push notificaiton service built on t
 * Install [Go 1.2](http://golang.org/doc/install#install)
 * Setup GOPATH
 * Add GOPATH/bin to PATH
-* go get goconfig
-* go get gorest
 * go get gpns
 * go install gpns
 * run gpns
@@ -17,8 +15,6 @@ GPNS provides scalable and efficient a mass push notificaiton service built on t
 mkdir ~/go
 export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
-go get github.com/msbranco/goconfig
-go get code.google.com/p/gorest
 go get github.com/usmanismail/gpns
 go install github.com/usmanismail/gpns
 gpns -awsConfig=[PATH-TO-AWS-CONFIG] -baseConfig=[PATH-TO-BASE-CONFIG]
