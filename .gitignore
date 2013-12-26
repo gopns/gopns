@@ -27,3 +27,6 @@ _testmain.go
 # Local project files for sublime text editor
 *.sublime-project
 *.sublime-workspace
+
+config/aws.conf
+config/base.conf
