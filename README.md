@@ -1,4 +1,4 @@
-gps
+GPNS
 ===
 
-Gopher Push Notification Service
+Go Push Notification Service
