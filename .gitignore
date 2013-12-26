@@ -20,3 +20,10 @@ _cgo_export.*
 _testmain.go
 
 *.exe
+
+# OSX Specific files 
+.DS_Store
+
+# Local project files for sublime text editor
+*.sublime-project
+*.sublime-workspace
