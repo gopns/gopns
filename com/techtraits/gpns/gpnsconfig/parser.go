@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/msbranco/goconfig"
 	"log"
+	"strings"
 )
 
 func ParseConfig() (BaseConfig, AWSConfig) {
@@ -31,7 +32,23 @@ func ParseConfig() (BaseConfig, AWSConfig) {
 	userSecret, err := awsConfig.GetString("default", "secret")
 	checkError("Unable to find AWS User Secret", err)
 
-	return BaseConfigStruct{port}, AWSConfigStruct{userId, userSecret}
+	//region, err := awsConfig.GetString("default", "region")
+	//checkError("Unable to find AWS Region", err)
+
+	platformApps, err := awsConfig.GetString("default", "platform-applications")
+	checkError("Unable to find AWS Platform Apps List", err)
+
+	platformAppsMap := make(map[string]PlatformApp)
+	for _, platformApp := range strings.Split(platformApps, ",") {
+		arn, err := awsConfig.GetString(platformApp, "arn")
+		checkError("Unable to find AWS ARN for app "+platformApp, err)
+		region, err := awsConfig.GetString(platformApp, "region")
+		checkError("Unable to find AWS region for app "+platformApp, err)
+		platformAppsMap[platformApp] = PlatformAppStruct{arn, region}
+
+	}
+
+	return BaseConfigStruct{port}, AWSConfigStruct{userId, userSecret, platformAppsMap}
 
 }
 

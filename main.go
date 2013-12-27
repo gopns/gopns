@@ -13,10 +13,9 @@ func main() {
 	baseConfig, awsConfig := gpnsconfig.ParseConfig()
 	log.Printf("Running server on port %s", baseConfig.Port())
 	log.Printf("Using AWS User ID %s", awsConfig.UserID())
-	log.Printf("Using AWS User Secret %s", awsConfig.UserSecret())
 
 	registrar := sns.Initilize(awsConfig)
-	registrar.RegisterDevice()
+	registrar.RegisterDevice("Test", "APA91bF1felnMnAgGtJm4NWcp2Zv4zpeKDko742sSdhBfK9uFtYREcoFQnLBuGockhSxMHMqTf2t5y_HwYe32PYVJNg0rwvGpdMbJwedgOZVdQ2lcQl6yB6CCp1xw2SosQcxU5JvGJLiO3aPuh53Qu_3Gzz-zpUgja2ZgLe31TAtHpY3Kgo3Fmc", "ENG_GB")
 
 	/*
 		gorest.RegisterService(new(RegistrationService))
