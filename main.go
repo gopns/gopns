@@ -1,36 +1,26 @@
 package main
 
 import (
-	"code.google.com/p/gorest"
+	//"code.google.com/p/gorest"
+	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/sns"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"log"
-	"net/http"
+	//"net/http"
 )
 
 func main() {
 
 	baseConfig, awsConfig := gpnsconfig.ParseConfig()
 	log.Printf("Running server on port %s", baseConfig.Port())
-	log.Printf("Using AWS User %s", awsConfig.UserID())
+	log.Printf("Using AWS User ID %s", awsConfig.UserID())
+	log.Printf("Using AWS User Secret %s", awsConfig.UserSecret())
 
-	gorest.RegisterService(new(RegistrationService))
-	http.Handle("/", gorest.Handle())
-	http.ListenAndServe(":8080", nil)
+	registrar := sns.Initilize(awsConfig)
+	registrar.RegisterDevice()
 
-}
+	/*
+		gorest.RegisterService(new(RegistrationService))
+		http.Handle("/", gorest.Handle())
+		http.ListenAndServe(":8080", nil)*/
 
-type RegistrationService struct {
-	//Service level config
-	gorest.RestService `root:"/device/" consumes:"application/json" produces:"application/json"`
-
-	//End-Point level configs: Field names must be the same as the corresponding method names,
-	// but not-exported (starts with lowercase)
-
-	registerDevice gorest.EndPoint `method:"GET" path:"/" output:"string"`
-}
-
-func (serv RegistrationService) RegisterDevice() (arn string) {
-
-	arn = "Test arn"
-	return
 }
