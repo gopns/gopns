@@ -42,9 +42,14 @@ func ParseConfig() (BaseConfig, AWSConfig) {
 	for _, platformApp := range strings.Split(platformApps, ",") {
 		arn, err := awsConfig.GetString(platformApp, "arn")
 		checkError("Unable to find AWS ARN for app "+platformApp, err)
+
 		region, err := awsConfig.GetString(platformApp, "region")
 		checkError("Unable to find AWS region for app "+platformApp, err)
-		platformAppsMap[platformApp] = PlatformAppStruct{arn, region}
+
+		typeValue, err := awsConfig.GetString(platformApp, "type")
+		checkError("Unable to find AWS type for app "+platformApp, err)
+
+		platformAppsMap[platformApp] = PlatformAppStruct{arn, region, typeValue}
 
 	}
 

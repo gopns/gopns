@@ -27,6 +27,7 @@ type AWSConfig interface {
 type PlatformAppStruct struct {
 	ArnValue    string
 	RegionValue string
+	TypeValue   string
 }
 
 func (this PlatformAppStruct) Arn() string {
@@ -37,7 +38,12 @@ func (this PlatformAppStruct) Region() string {
 	return this.RegionValue
 }
 
+func (this PlatformAppStruct) Type() string {
+	return this.TypeValue
+}
+
 type PlatformApp interface {
 	Arn() string
 	Region() string
+	Type() string
 }

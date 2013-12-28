@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
+
 	"net/url"
 	"sort"
 	"strings"
@@ -18,8 +19,9 @@ func SignRequest(awsConfig gpnsconfig.AWSConfig, method, path string, params url
 	params.Set("SignatureMethod", "HmacSHA256")
 	params.Set("Version", "2010-03-31")
 
+	paramsStr := params.Encode()
 	var sarray []string
-	sarray = append(sarray, params.Encode())
+	sarray = append(sarray, strings.Replace(paramsStr, "+", "%20", -1))
 	sort.StringSlice(sarray).Sort()
 	joined := strings.Join(sarray, "&")
 	payload := method + "\n" + host + "\n" + path + "\n" + joined

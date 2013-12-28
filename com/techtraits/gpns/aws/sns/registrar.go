@@ -6,7 +6,6 @@ import (
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -16,7 +15,7 @@ type RegistrarStruct struct {
 	awsConfig gpnsconfig.AWSConfig
 }
 
-func Initilize(awsConfig gpnsconfig.AWSConfig) Registrar {
+func InitilizeRegistrar(awsConfig gpnsconfig.AWSConfig) Registrar {
 	return RegistrarStruct{awsConfig}
 }
 
@@ -57,5 +56,4 @@ func (this RegistrarStruct) RegisterDevice(platformAppName string, token string,
 		xml.Unmarshal(content, &createResponse)
 		return createResponse.CreatePlatformEndpointResult.EndpointArn, nil
 	}
-	return "", err
 }
