@@ -44,9 +44,11 @@ platform-applications=Test1,Test2
 arn=arn:aws:sns:us-east-1:238699486533:app/GCM/Test
 #Which region is the application running in?
 region=us-east-1
+type=GCM
 
 [Test2]
 arn=arn:aws:sns:us-east-1:238699486533:app/GCM/Test
 region=us-east-1
+type=GCM
 ```
 
