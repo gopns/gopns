@@ -1,5 +1,9 @@
 package gpnsconfig
 
+import (
+	"github.com/msbranco/goconfig"
+)
+
 type AWSConfigStruct struct {
 	UserIDValue       string
 	UserSecretValue   string
@@ -24,26 +28,14 @@ type AWSConfig interface {
 	PlatformApps() map[string]PlatformApp
 }
 
-type PlatformAppStruct struct {
-	ArnValue    string
-	RegionValue string
-	TypeValue   string
-}
+func parseAwsConfig(awsConfig *goconfig.ConfigFile) AWSConfigStruct {
+	userId, err := awsConfig.GetString("default", "id")
+	checkError("Unable to find AWS User ID", err)
 
-func (this PlatformAppStruct) Arn() string {
-	return this.ArnValue
-}
+	userSecret, err := awsConfig.GetString("default", "secret")
+	checkError("Unable to find AWS User Secret", err)
 
-func (this PlatformAppStruct) Region() string {
-	return this.RegionValue
-}
+	platformAppsMap := parsePlatformAppConfig(awsConfig)
 
-func (this PlatformAppStruct) Type() string {
-	return this.TypeValue
-}
-
-type PlatformApp interface {
-	Arn() string
-	Region() string
-	Type() string
+	return AWSConfigStruct{userId, userSecret, platformAppsMap}
 }
