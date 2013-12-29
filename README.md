@@ -52,3 +52,13 @@ region=us-east-1
 type=GCM
 ```
 
+### REST Interface
+
+* __Device__ (/rest/device)
+  * ```GET /rest/device/ ```
+    * Get All Devices
+  * ```GET /rest/device/{device-alias}```
+    * Get Specified Device
+  * ```POST /rest/device/```
+    * ```{"Alias":"SomeID","Id":"DeviceID","Arn":"Arn","Platform":"IOS","Locale":"EN_US","Tags":["Whale"]}```
+    * Register Device
