@@ -3,6 +3,7 @@ package device
 import (
 	"code.google.com/p/gorest"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/sns"
+	"github.com/usmanismail/gpns/com/techtraits/gpns/rest/restutil"
 )
 
 type DeviceService struct {
@@ -29,6 +30,13 @@ func (serv DeviceService) GetDevices(cursor string) DeviceList {
 }
 
 func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
+
+	restError := restutil.GetRestError(serv.ResponseBuilder())
+	defer restutil.HandleErrors(restError)
+
+	err := device.ValidateLocale()
+	restutil.CheckError(err, restError, 400)
+	//TODO Register with Database
 
 	sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
 
