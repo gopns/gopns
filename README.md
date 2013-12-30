@@ -20,35 +20,5 @@ go install github.com/usmanismail/gpns
 gpns -awsConfig=[PATH-TO-AWS-CONFIG] -baseConfig=[PATH-TO-BASE-CONFIG]
 ```
 
-### Configuration 
-
-__Base Configuration__ ($GOPATH/src/github.com/usmanismail/gpns/config/base.conf)
-```bash
-[default]
-#Port for the REST server to run on
-port=8080
-```
-__AWS Configuration__ ($GOPATH/src/github.com/usmanismail/gpns/config/aws.conf)
-```bash
-[default]
-#AWS User ID and Secret
-id=ASJDKLADKNDKLNDKLSN
-secret=SDBSDBSDNMBSNBDNbsndbsnbdsnBDSMNBsnbdnsdnsdnbs
-
-#Name of Platform Applications, comma seperated list (e.g. Test1,Test2)
-platform-applications=Test1,Test2
-
-#Add one section for each Application configured above
-[Test1]
-#The Application ARN
-arn=arn:aws:sns:us-east-1:238699486533:app/GCM/Test
-#Which region is the application running in?
-region=us-east-1
-type=GCM
-
-[Test2]
-arn=arn:aws:sns:us-east-1:238699486533:app/GCM/Test
-region=us-east-1
-type=GCM
-```
+Please see the [Wiki](https://github.com/usmanismail/gpns/wiki) for more information and documentation
 
