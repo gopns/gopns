@@ -58,7 +58,7 @@ type=GCM
 
 | URL | Method | Parameters | Returns | Description  |
 |:---:|:------:|:----------:|:-------:|:------------:|
-|  /rest/device/ | GET | N/A | Device  | List Devices |
+|  /rest/device/?cursor={cursor} | GET | Cursor | DeviceList  | List Devices |
 |  /rest/device/{alias} | GET | Alias | Device[]| Get Device |
 |  /rest/device/ | POST |  DeviceRegistration | N/A  | Add/Update Device|
 |  /rest/device/{alias}/tags | POST |  Alias, Tag[] | N/A  | Add tags to device
@@ -86,6 +86,25 @@ type=GCM
     "Tags": [          //Arbitrary tags to be used for segmentation
         "Whale"
     ]
+}
+
+{
+    	// DeviceList
+    "devices":[    	
+    	"Alias": "SomeID", // A Unique ID for User
+    	"Arns":["ARN1","ARN2"]
+    	"Locale": "en_US", //Based on rfc4646 
+    	"Tags": [          //Arbitrary tags to be used for segmentation
+        	"Whale"
+    	],
+    	"Alias": "SomeOtherID", // A Unique ID for User
+    	"Arns":["ARN3","ARN3"]
+    	"Locale": "en_US", //Based on rfc4646 
+    	"Tags": [          //Arbitrary tags to be used for segmentation
+        	"Minnow"
+    	],    	
+    ],
+    "cursor":"CURSOR"
 }
 ```
 
