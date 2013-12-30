@@ -56,20 +56,33 @@ type=GCM
 
 * __Device__ (/rest/device)
 
-| URL                           				| Method        | Parameters 			 			 | Returns | Description  |
-|:-----------------------------				   :|:-------------:|:----------						:|:-------:|:------------:|
-|  /rest/device/                				| GET           |    N/A     			 			 | Device  | List Devices |
-|  /rest/device/{alias}         				| GET           |    Alias   			 			 | Device[]| Get Device   |
-|  /rest/device/					            | POST          |    DeviceRegistration  			 | Device  | Add/Update Device|
+| URL | Method | Parameters | Returns | Description  |
+|:---:|:------:|:----------:|:-------:|:------------:|
+|  /rest/device/ | GET | N/A | Device  | List Devices |
+|  /rest/device/{alias} | GET | Alias | Device[]| Get Device |
+|  /rest/device/ | POST |  DeviceRegistration | N/A  | Add/Update Device|
+|  /rest/device/{alias}/tags | POST |  Alias, Tag[] | N/A  | Add tags to device
+|  /rest/device/{alias}/tag/{tag} | DELETE | Alias, Tag  | N/A  | Delete tag from device
+|  /rest/device/{alias}/arn/{arn} | DELETE | Alias, Arn  | N/A  | Delete arn from device
 
 
 ```json
 {
-	// Device
+	// Device Registration
     "Alias": "SomeID", // A Unique ID for User
     "Id": "DeviceID",  // The Platform specific device id      
     "Locale": "en_US", //Based on rfc4646 
     "PlatformApp":"Test1", //One of the configured push notificaton applications
+    "Tags": [          //Arbitrary tags to be used for segmentation
+        "Whale"
+    ]
+}
+
+{
+	// Device
+    "Alias": "SomeID", // A Unique ID for User
+    "Arns":["ARN1","ARN2"]
+    "Locale": "en_US", //Based on rfc4646 
     "Tags": [          //Arbitrary tags to be used for segmentation
         "Whale"
     ]
