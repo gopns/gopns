@@ -14,3 +14,8 @@ type Device struct {
 	Arns   []string
 	Tags   []string
 }
+
+type DeviceList struct {
+	Devices []Device
+	cursor  string
+}

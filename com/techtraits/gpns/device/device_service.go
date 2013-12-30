@@ -11,7 +11,7 @@ type DeviceService struct {
 	registerDevice gorest.EndPoint `method:"POST" path:"/" postdata:"DeviceRegistration"`
 	addTags        gorest.EndPoint `method:"POST" path:"/{deviceAlias:string}/tags/" postdata:"[]string"`
 	getDevice      gorest.EndPoint `method:"GET" path:"/{deviceAlias:string}" output:"Device"`
-	getDevices     gorest.EndPoint `method:"GET" path:"/" output:"[]Device"`
+	getDevices     gorest.EndPoint `method:"GET" path:"/?{cursor:string}" output:"DeviceList"`
 	deleteTag      gorest.EndPoint `method:"DELETE" path:"/{alias:string}/tag/{tag:string}"`
 	deleteArn      gorest.EndPoint `method:"DELETE" path:"/{alias:string}/arn/{arn:string}"`
 }
@@ -21,9 +21,9 @@ func (serv DeviceService) GetDevice(deviceAlias string) Device {
 	return Device{deviceAlias, "EN_US", []string{"Arn1", "Arn2"}, []string{"Whale"}}
 }
 
-func (serv DeviceService) GetDevices() []Device {
+func (serv DeviceService) GetDevices(cursor string) DeviceList {
 
-	return []Device{Device{"Alias1", "EN_US", []string{"Arn1", "Arn2"}, []string{"Whale"}}, Device{"Alias2", "EN_CA", []string{"Arn3", "Arn4"}, []string{"Minnow"}}}
+	return DeviceList{[]Device{Device{"Alias1", "EN_US", []string{"Arn1", "Arn2"}, []string{"Whale"}}, Device{"Alias2", "EN_CA", []string{"Arn3", "Arn4"}, []string{"Minnow"}}}, "cursor"}
 }
 
 func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
