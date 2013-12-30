@@ -56,27 +56,23 @@ type=GCM
 
 * __Device__ (/rest/device)
 
+| URL                           				| Method        | Parameters 			 			 | Returns | Description  |
+|:-----------------------------				   :|:-------------:|:----------						:|:-------:|:------------:|
+|  /rest/device/                				| GET           |    N/A     			 			 | Device  | List Devices |
+|  /rest/device/{alias}         				| GET           |    Alias   			 			 | Device[]| Get Device   |
+|  /rest/device/					            | POST          |    DeviceRegistration  			 | Device  | Add/Update Device|
+
+
 ```json
 {
-    "Alias": "SomeID", // Must be unique to each push notification recipient. 
-    "Id": "DeviceID",  // The Platform specific device id
-    "Arn": "Arn",      
-    "Platform": "IOS", // One of IOS, ANDROID, KINDLE
+	// Device
+    "Alias": "SomeID", // A Unique ID for User
+    "Id": "DeviceID",  // The Platform specific device id      
     "Locale": "en_US", //Based on rfc4646 
+    "PlatformApp":"Test1", //One of the configured push notificaton applications
     "Tags": [          //Arbitrary tags to be used for segmentation
         "Whale"
     ]
 }
 ```
-
-
-| URL                           | Method        | Parameters | Returns | Description  |
-|:-----------------------------:|:-------------:|:----------:|:-------:|:------------:|
-|  /rest/device/                | GET           |    N/A     | Device  | List Devices |
-|  /rest/device/{alias}         | GET           |    Alias   | Device[]| Get Device   |
-|  /rest/device/                | POST          |    Device<sup>1</sup>  | Device<sup>2</sup>  | Add/Update Device|
-
-<sup>1</sup> The ARN parameter will be ignored. We will use the ARN returned by amazon registration API.
-
-<sup>2</sup> The ARN parameter is added to the device regardless of whether it was supplied in the input data.
 
