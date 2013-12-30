@@ -4,6 +4,12 @@ import (
 	"github.com/msbranco/goconfig"
 )
 
+var awsConfigInstance AWSConfig
+
+func AWSConfigInstance() AWSConfig {
+	return awsConfigInstance
+}
+
 type AWSConfigStruct struct {
 	UserIDValue       string
 	UserSecretValue   string
@@ -28,14 +34,12 @@ type AWSConfig interface {
 	PlatformApps() map[string]PlatformApp
 }
 
-func parseAwsConfig(awsConfig *goconfig.ConfigFile) AWSConfigStruct {
+func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 	userId, err := awsConfig.GetString("default", "id")
 	checkError("Unable to find AWS User ID", err)
 
 	userSecret, err := awsConfig.GetString("default", "secret")
 	checkError("Unable to find AWS User Secret", err)
 
-	platformAppsMap := parsePlatformAppConfig(awsConfig)
-
-	return AWSConfigStruct{userId, userSecret, platformAppsMap}
+	awsConfigInstance = AWSConfigStruct{userId, userSecret, parsePlatformAppConfig(awsConfig)}
 }

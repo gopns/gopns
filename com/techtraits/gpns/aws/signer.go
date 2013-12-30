@@ -13,8 +13,8 @@ import (
 
 var b64 = base64.StdEncoding
 
-func SignRequest(awsConfig gpnsconfig.AWSConfig, method, path string, params url.Values, host string) {
-	params.Set("AWSAccessKeyId", awsConfig.UserID())
+func SignRequest(method, path string, params url.Values, host string) {
+	params.Set("AWSAccessKeyId", gpnsconfig.AWSConfigInstance().UserID())
 	params.Set("SignatureVersion", "2")
 	params.Set("SignatureMethod", "HmacSHA256")
 	params.Set("Version", "2010-03-31")
@@ -26,7 +26,7 @@ func SignRequest(awsConfig gpnsconfig.AWSConfig, method, path string, params url
 	joined := strings.Join(sarray, "&")
 	payload := method + "\n" + host + "\n" + path + "\n" + joined
 
-	hash := hmac.New(sha256.New, []byte(awsConfig.UserSecret()))
+	hash := hmac.New(sha256.New, []byte(gpnsconfig.AWSConfigInstance().UserSecret()))
 
 	hash.Write([]byte(payload))
 	signature := make([]byte, b64.EncodedLen(hash.Size()))

@@ -7,8 +7,11 @@ import (
 	"net/http"
 )
 
-func SetupRestServices(baseConfig gpnsconfig.BaseConfig) {
-	gorest.RegisterService(new(device.DeviceService))
+func SetupRestServices() {
+
+	deviceService := new(device.DeviceService)
+
+	gorest.RegisterService(deviceService)
 	http.Handle("/", gorest.Handle())
-	http.ListenAndServe(":"+baseConfig.Port(), nil)
+	http.ListenAndServe(":"+gpnsconfig.BaseConfigInstance().Port(), nil)
 }

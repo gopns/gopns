@@ -2,9 +2,11 @@ package device
 
 import (
 	"code.google.com/p/gorest"
+	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/sns"
 )
 
 type DeviceService struct {
+
 	//Service level config
 	gorest.RestService `root:"/rest/device/" consumes:"application/json" produces:"application/json"`
 
@@ -28,6 +30,8 @@ func (serv DeviceService) GetDevices(cursor string) DeviceList {
 
 func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 
+	sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+
 	return
 }
 
@@ -44,4 +48,14 @@ func (serv DeviceService) DeleteTag(deviceAlias string, tag string) {
 func (serv DeviceService) DeleteArn(deviceAlias string, arn string) {
 
 	return
+}
+
+func formatTags(locale string, alias string, tags []string) string {
+
+	tagString := alias
+	tagString = tagString + "," + locale
+	for _, tag := range tags {
+		tagString = tagString + "," + tag
+	}
+	return tagString
 }

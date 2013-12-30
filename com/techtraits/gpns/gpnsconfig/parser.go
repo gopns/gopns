@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func ParseConfig() (BaseConfig, AWSConfig) {
+func ParseConfig() {
 	var aws_config_file string
 	var base_config_file string
 
@@ -22,7 +22,8 @@ func ParseConfig() (BaseConfig, AWSConfig) {
 	awsConfig, err := goconfig.ReadConfigFile(aws_config_file)
 	checkError("Unable to parse AWS config", err)
 
-	return parseBaseConfig(baseConfig), parseAwsConfig(awsConfig)
+	parseBaseConfig(baseConfig)
+	parseAwsConfig(awsConfig)
 
 }
 

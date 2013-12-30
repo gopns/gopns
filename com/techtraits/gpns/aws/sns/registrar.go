@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-type RegistrarStruct struct {
-	awsConfig gpnsconfig.AWSConfig
+var registrarInstance RegistrarStruct
+
+func RegistrarInstance() Registrar {
+	return registrarInstance
 }
 
-func InitilizeRegistrar(awsConfig gpnsconfig.AWSConfig) Registrar {
-	return RegistrarStruct{awsConfig}
+type RegistrarStruct struct {
 }
 
 type Registrar interface {
@@ -28,15 +29,15 @@ func (this RegistrarStruct) RegisterDevice(platformAppName string, token string,
 	values.Set("Action", "CreatePlatformEndpoint")
 	values.Set("CustomUserData", customData)
 	values.Set("Token", token)
-	values.Set("PlatformApplicationArn", this.awsConfig.PlatformApps()[platformAppName].Arn())
+	values.Set("PlatformApplicationArn", gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Arn())
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	url_, err := url.Parse("http://sns." + this.awsConfig.PlatformApps()[platformAppName].Region() + ".amazonaws.com/")
+	url_, err := url.Parse("http://sns." + gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Region() + ".amazonaws.com/")
 	if err != nil {
 		return "", err
 	}
 
-	aws.SignRequest(this.awsConfig, "POST", "/", values, url_.Host)
+	aws.SignRequest("POST", "/", values, url_.Host)
 
 	response, err := http.PostForm(url_.String(), values)
 	if err != nil {
