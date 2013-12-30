@@ -57,7 +57,7 @@ type=GCM
 * __Device__ (/rest/device)
 
 | URL | Method | Parameters | Returns | Description  |
-|:---:|:------:|:----------:|:-------:|:------------:|
+|:---|:------:|:----------:|:-------:|:------------:|
 |  /rest/device/?cursor={cursor} | GET | Cursor | DeviceList  | List Devices |
 |  /rest/device/{alias} | GET | Alias | Device[]| Get Device |
 |  /rest/device/ | POST |  DeviceRegistration | N/A  | Add/Update Device|
@@ -89,7 +89,7 @@ type=GCM
 }
 
 {
-    	// DeviceList
+    // DeviceList
     "devices":[    	
     	"Alias": "SomeID", // A Unique ID for User
     	"Arns":["ARN1","ARN2"]
