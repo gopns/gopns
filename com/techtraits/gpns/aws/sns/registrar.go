@@ -6,7 +6,6 @@ import (
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"time"
 )
