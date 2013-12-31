@@ -6,7 +6,7 @@ import (
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"io/ioutil"
-	"net/http"
+	"log"
 	"net/url"
 	"time"
 )
@@ -32,14 +32,9 @@ func (this RegistrarStruct) RegisterDevice(platformAppName string, token string,
 	values.Set("PlatformApplicationArn", gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Arn())
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	url_, err := url.Parse("http://sns." + gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Region() + ".amazonaws.com/")
-	if err != nil {
-		return "", err
-	}
+	response, err := MakeRequest("http://sns."+gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Region()+".amazonaws.com/",
+		values, platformAppName)
 
-	aws.SignRequest("POST", "/", values, url_.Host)
-
-	response, err := http.PostForm(url_.String(), values)
 	if err != nil {
 		return "", err
 	}

@@ -38,7 +38,8 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	restutil.CheckError(err, restError, 400)
 	//TODO Register with Database
 
-	sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+	_, err = sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+	restutil.CheckError(err, restError, 500)
 
 	return
 }
