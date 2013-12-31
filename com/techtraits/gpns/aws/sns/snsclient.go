@@ -14,6 +14,7 @@ func MakeRequest(host string, values url.Values, platformAppName string) (*http.
 	}
 
 	req, err := http.NewRequest("POST", url_.String(), strings.NewReader(values.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
 	aws.SignRequest(req, "sns", platformAppName)
 	response, err := http.DefaultClient.Do(req)
 

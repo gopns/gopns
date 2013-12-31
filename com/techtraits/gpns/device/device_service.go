@@ -2,6 +2,7 @@ package device
 
 import (
 	"code.google.com/p/gorest"
+	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/dynamodb"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/sns"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/rest/restutil"
 )
@@ -36,9 +37,20 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 
 	err := device.ValidateLocale()
 	restutil.CheckError(err, restError, 400)
-	//TODO Register with Database
 
-	_, err = sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+	arn, err := sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+	restutil.CheckError(err, restError, 400)
+
+	key := make(map[string]dynamodb.Attribute)
+	key["alias"] = dynamodb.Attribute{S: device.Alias}
+	attributeUpdates := make(map[string]dynamodb.AttributeUpdate)
+	attributeUpdates["arns"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: []string{arn}}}
+	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale}}
+	attributeUpdates["tags"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: device.Tags}}
+
+	updateItemRequest := dynamodb.UpdateItemRequest{Key: key, AttributeUpdates: attributeUpdates}
+	err = dynamodb.UpdateItem(device.PlatformApp, updateItemRequest)
+
 	restutil.CheckError(err, restError, 500)
 
 	return

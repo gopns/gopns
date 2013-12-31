@@ -5,7 +5,7 @@ type ErrorResponse struct {
 }
 
 type ErrorStruct struct {
-	Type    string
+	Type    string `json:"__type"`
 	Code    string
-	Message string
+	Message string `json:"message"`
 }

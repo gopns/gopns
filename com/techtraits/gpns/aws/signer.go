@@ -49,8 +49,7 @@ func SignRequest(req *http.Request, serviceName string, platformAppName string) 
 	s := V4Signer{gpnsconfig.AWSConfigInstance().UserID(), gpnsconfig.AWSConfigInstance().UserSecret(),
 		serviceName, gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Region()}
 
-	req.Header.Set("host", req.Host) // host header must be included as a signed header
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+	req.Header.Set("host", req.Host)                  // host header must be included as a signed header
 	t := s.requestTime(req)                           // Get requst time
 	creq := s.canonicalRequest(req)                   // Build canonical request
 	sts := s.stringToSign(t, creq)                    // Build string to sign
