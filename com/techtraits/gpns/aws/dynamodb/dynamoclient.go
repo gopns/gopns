@@ -66,7 +66,38 @@ func GetItem(getItemRequest GetItemRequest, userId string,
 		return items["Item"], nil
 	}
 
-	return nil, nil
+}
+
+func ScanForItems(scanRequest ScanRequest, userId string,
+	userSecert string, region string) (*ScanResponse, error) {
+
+	query, err := json.Marshal(scanRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
+		string(query[:]), "Scan", userId, userSecert, region)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		content, _ := ioutil.ReadAll(response.Body)
+		var errorResponse aws.ErrorStruct
+		json.Unmarshal(content, &errorResponse)
+		return nil, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+	} else {
+		content, _ := ioutil.ReadAll(response.Body)
+		scanResponse := new(ScanResponse)
+		json.Unmarshal(content, scanResponse)
+
+		return scanResponse, nil
+	}
+
 }
 
 func makeRequest(host string, query string, action string, userId string,

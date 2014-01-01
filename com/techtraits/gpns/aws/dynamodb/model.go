@@ -29,3 +29,14 @@ type GetItemRequest struct {
 	Key       map[string]Attribute
 	TableName string
 }
+
+type ScanRequest struct {
+	ExclusiveStartKey map[string]Attribute `json:",omitempty"`
+	Limit             int
+	TableName         string
+}
+
+type ScanResponse struct {
+	Items            []map[string]Attribute
+	LastEvaluatedKey map[string]Attribute
+}

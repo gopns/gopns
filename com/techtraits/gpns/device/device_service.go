@@ -42,7 +42,30 @@ func (serv DeviceService) GetDevice(deviceAlias string) Device {
 
 func (serv DeviceService) GetDevices(cursor string) DeviceList {
 
-	return DeviceList{[]Device{Device{"Alias1", "EN_US", []string{"Arn1", "Arn2"}, []string{"Whale"}}, Device{"Alias2", "EN_CA", []string{"Arn3", "Arn4"}, []string{"Minnow"}}}, "cursor"}
+	restError := restutil.GetRestError(serv.ResponseBuilder())
+	defer restutil.HandleErrors(restError)
+
+	var startKey map[string]dynamodb.Attribute
+	if len(cursor) > 0 {
+		startKey = make(map[string]dynamodb.Attribute)
+		startKey["alias"] = dynamodb.Attribute{S: cursor}
+	}
+
+	scanRequest := dynamodb.ScanRequest{ExclusiveStartKey: startKey, TableName: config.AWSConfigInstance().DynamoTable(), Limit: 1000}
+
+	response, err := dynamodb.ScanForItems(
+		scanRequest,
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().Region())
+	restutil.CheckError(err, restError, 500)
+
+	cursor = ""
+	if len(response.LastEvaluatedKey) != 0 {
+		cursor = response.LastEvaluatedKey["alias"].S
+	}
+
+	return DeviceList{convertToDevices(response.Items), cursor}
 }
 
 func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
@@ -81,6 +104,17 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	restutil.CheckError(err, restError, 500)
 
 	return
+}
+
+func convertToDevices(items []map[string]dynamodb.Attribute) []Device {
+
+	devices := make([]Device, 0, 0)
+	for _, item := range items {
+		device := Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["tags"].SS}
+		devices = append(devices, device)
+	}
+
+	return devices
 }
 
 func (serv DeviceService) AddTags(tags []string, deviceAlias string) {
