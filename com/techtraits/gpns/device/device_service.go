@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/gorest"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/dynamodb"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/aws/sns"
+	config "github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"github.com/usmanismail/gpns/com/techtraits/gpns/rest/restutil"
 )
 
@@ -18,6 +19,7 @@ type DeviceService struct {
 	getDevices     gorest.EndPoint `method:"GET" path:"/?{cursor:string}" output:"DeviceList"`
 	deleteTag      gorest.EndPoint `method:"DELETE" path:"/{alias:string}/tag/{tag:string}"`
 	deleteArn      gorest.EndPoint `method:"DELETE" path:"/{alias:string}/arn/{arn:string}"`
+	deleteDevice   gorest.EndPoint `method:"DELETE" path:"/{alias:string}"`
 }
 
 func (serv DeviceService) GetDevice(deviceAlias string) Device {
@@ -38,7 +40,13 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	err := device.ValidateLocale()
 	restutil.CheckError(err, restError, 400)
 
-	arn, err := sns.RegistrarInstance().RegisterDevice(device.PlatformApp, device.Id, formatTags(device.Locale, device.Alias, device.Tags))
+	arn, err := sns.RegisterDevice(
+		device.Id,
+		formatTags(device.Locale, device.Alias, device.Tags),
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Region(),
+		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Arn())
 	restutil.CheckError(err, restError, 400)
 
 	key := make(map[string]dynamodb.Attribute)
@@ -48,15 +56,26 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale}}
 	attributeUpdates["tags"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: device.Tags}}
 
-	updateItemRequest := dynamodb.UpdateItemRequest{Key: key, AttributeUpdates: attributeUpdates}
-	err = dynamodb.UpdateItem(device.PlatformApp, updateItemRequest)
-
+	updateItemRequest := dynamodb.UpdateItemRequest{
+		Key:              key,
+		AttributeUpdates: attributeUpdates,
+		TableName:        config.AWSConfigInstance().PlatformApps()[device.PlatformApp].DynamoTable()}
+	err = dynamodb.UpdateItem(
+		updateItemRequest,
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Region())
 	restutil.CheckError(err, restError, 500)
 
 	return
 }
 
 func (serv DeviceService) AddTags(tags []string, deviceAlias string) {
+
+	return
+}
+
+func (serv DeviceService) DeleteDevice(deviceAlias string) {
 
 	return
 }

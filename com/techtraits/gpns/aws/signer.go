@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
-	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -44,10 +43,9 @@ The signed request will include a new "Authorization" header indicating that the
 
 Any changes to the request after signing the request will invalidate the signature.
 */
-func SignRequest(req *http.Request, serviceName string, platformAppName string) {
+func SignRequest(req *http.Request, userId string, userSecret string, serviceName string, region string) {
 
-	s := V4Signer{gpnsconfig.AWSConfigInstance().UserID(), gpnsconfig.AWSConfigInstance().UserSecret(),
-		serviceName, gpnsconfig.AWSConfigInstance().PlatformApps()[platformAppName].Region()}
+	s := V4Signer{userId, userSecret, serviceName, region}
 
 	req.Header.Set("host", req.Host)                  // host header must be included as a signed header
 	t := s.requestTime(req)                           // Get requst time
