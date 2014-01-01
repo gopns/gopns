@@ -14,6 +14,8 @@ type AWSConfigStruct struct {
 	UserIDValue       string
 	UserSecretValue   string
 	PlatformAppsValue map[string]PlatformApp
+	DynamoTableValue  string
+	RegionValue       string
 }
 
 func (this AWSConfigStruct) UserID() string {
@@ -28,10 +30,20 @@ func (this AWSConfigStruct) PlatformApps() map[string]PlatformApp {
 	return this.PlatformAppsValue
 }
 
+func (this AWSConfigStruct) DynamoTable() string {
+	return this.DynamoTableValue
+}
+
+func (this AWSConfigStruct) Region() string {
+	return this.RegionValue
+}
+
 type AWSConfig interface {
 	UserID() string
 	UserSecret() string
 	PlatformApps() map[string]PlatformApp
+	DynamoTable() string
+	Region() string
 }
 
 func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
@@ -41,5 +53,11 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 	userSecret, err := awsConfig.GetString("default", "secret")
 	checkError("Unable to find AWS User Secret", err)
 
-	awsConfigInstance = AWSConfigStruct{userId, userSecret, parsePlatformAppConfig(awsConfig)}
+	dynamoTableValue, err := awsConfig.GetString("default", "dynamo-table")
+	checkError("Unable to find AWS Dynamo Table", err)
+
+	region, err := awsConfig.GetString("default", "region")
+	checkError("Unable to find AWS region", err)
+
+	awsConfigInstance = AWSConfigStruct{userId, userSecret, parsePlatformAppConfig(awsConfig), dynamoTableValue, region}
 }

@@ -23,8 +23,21 @@ type DeviceService struct {
 }
 
 func (serv DeviceService) GetDevice(deviceAlias string) Device {
+	restError := restutil.GetRestError(serv.ResponseBuilder())
+	defer restutil.HandleErrors(restError)
 
-	return Device{deviceAlias, "EN_US", []string{"Arn1", "Arn2"}, []string{"Whale"}}
+	key := make(map[string]dynamodb.Attribute)
+	key["alias"] = dynamodb.Attribute{S: deviceAlias}
+	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: config.AWSConfigInstance().DynamoTable()}
+
+	item, err := dynamodb.GetItem(
+		getItemRequest,
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().Region())
+	restutil.CheckError(err, restError, 500)
+
+	return Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["tags"].SS}
 }
 
 func (serv DeviceService) GetDevices(cursor string) DeviceList {
@@ -45,7 +58,7 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 		formatTags(device.Locale, device.Alias, device.Tags),
 		config.AWSConfigInstance().UserID(),
 		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Region(),
+		config.AWSConfigInstance().Region(),
 		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Arn())
 	restutil.CheckError(err, restError, 400)
 
@@ -59,12 +72,12 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	updateItemRequest := dynamodb.UpdateItemRequest{
 		Key:              key,
 		AttributeUpdates: attributeUpdates,
-		TableName:        config.AWSConfigInstance().PlatformApps()[device.PlatformApp].DynamoTable()}
+		TableName:        config.AWSConfigInstance().DynamoTable()}
 	err = dynamodb.UpdateItem(
 		updateItemRequest,
 		config.AWSConfigInstance().UserID(),
 		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Region())
+		config.AWSConfigInstance().Region())
 	restutil.CheckError(err, restError, 500)
 
 	return

@@ -24,3 +24,8 @@ type UpdateItemRequest struct {
 	ReturnValues                string `json:",omitempty"`
 	TableName                   string
 }
+
+type GetItemRequest struct {
+	Key       map[string]Attribute
+	TableName string
+}

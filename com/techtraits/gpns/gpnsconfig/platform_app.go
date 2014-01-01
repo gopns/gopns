@@ -6,33 +6,21 @@ import (
 )
 
 type PlatformAppStruct struct {
-	ArnValue         string
-	RegionValue      string
-	TypeValue        string
-	DynamoTableValue string
+	ArnValue  string
+	TypeValue string
 }
 
 func (this PlatformAppStruct) Arn() string {
 	return this.ArnValue
 }
 
-func (this PlatformAppStruct) Region() string {
-	return this.RegionValue
-}
-
 func (this PlatformAppStruct) Type() string {
 	return this.TypeValue
 }
 
-func (this PlatformAppStruct) DynamoTable() string {
-	return this.DynamoTableValue
-}
-
 type PlatformApp interface {
 	Arn() string
-	Region() string
 	Type() string
-	DynamoTable() string
 }
 
 func parsePlatformAppConfig(awsConfig *goconfig.ConfigFile) map[string]PlatformApp {
@@ -43,16 +31,10 @@ func parsePlatformAppConfig(awsConfig *goconfig.ConfigFile) map[string]PlatformA
 		arn, err := awsConfig.GetString(platformApp, "arn")
 		checkError("Unable to find AWS ARN for app "+platformApp, err)
 
-		region, err := awsConfig.GetString(platformApp, "region")
-		checkError("Unable to find AWS region for app "+platformApp, err)
-
 		typeValue, err := awsConfig.GetString(platformApp, "type")
 		checkError("Unable to find AWS type for app "+platformApp, err)
 
-		dynamoTableValue, err := awsConfig.GetString(platformApp, "dynamo-table")
-		checkError("Unable to find AWS Dynamo Table for app "+platformApp, err)
-
-		platformAppsMap[platformApp] = PlatformAppStruct{arn, region, typeValue, dynamoTableValue}
+		platformAppsMap[platformApp] = PlatformAppStruct{arn, typeValue}
 
 	}
 	return platformAppsMap
