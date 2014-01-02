@@ -21,6 +21,7 @@ func ParseConfig() APPLICATION_MODE {
 	var send bool
 	var input_file string
 	var output_file string
+	var message_file string
 
 	flag.StringVar(&base_config_file, "baseConfig", "./config/base.conf", "The path to the base configuration file")
 	flag.StringVar(&aws_config_file, "awsConfig", "./config/aws.conf", "The path to the aws configuration file")
@@ -30,6 +31,8 @@ func ParseConfig() APPLICATION_MODE {
 
 	flag.StringVar(&input_file, "inputFile", "", "The path to the Device IDs or Arns file")
 	flag.StringVar(&output_file, "outputFile", "", "The path to the Device IDs or Arns file")
+	flag.StringVar(&message_file, "messageFile", "", "The path to the file containing the notificaito message to be sent out")
+
 	flag.Parse()
 
 	log.Printf("Using base configuration file: %s", base_config_file)
