@@ -17,7 +17,7 @@ export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
 go get github.com/usmanismail/gpns
 go install github.com/usmanismail/gpns
-gpns -awsConfig=[PATH-TO-AWS-CONFIG] -baseConfig=[PATH-TO-BASE-CONFIG]
+gpns
 ```
 
 Please see the [Wiki](https://github.com/usmanismail/gpns/wiki) for more information and documentation
