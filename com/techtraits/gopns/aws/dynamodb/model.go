@@ -16,6 +16,20 @@ type Attribute struct {
 	BS []string `json:",omitempty"`
 }
 
+type AttributeDefinition struct {
+	AttributeName string
+	AttributeType string
+}
+type KeySchema struct {
+	AttributeName string
+	KeyType       string
+}
+
+type ProvisionedThroughput struct {
+	ReadCapacityUnits  int
+	WriteCapacityUnits int
+}
+
 type UpdateItemRequest struct {
 	Key                         map[string]Attribute
 	AttributeUpdates            map[string]AttributeUpdate
@@ -23,6 +37,13 @@ type UpdateItemRequest struct {
 	ReturnItemCollectionMetrics string `json:",omitempty"`
 	ReturnValues                string `json:",omitempty"`
 	TableName                   string
+}
+
+type CreateTableRequest struct {
+	AttributeDefinitions  []AttributeDefinition
+	TableName             string
+	KeySchema             []KeySchema
+	ProvisionedThroughput ProvisionedThroughput
 }
 
 type GetItemRequest struct {

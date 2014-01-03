@@ -11,11 +11,13 @@ func AWSConfigInstance() AWSConfig {
 }
 
 type AWSConfigStruct struct {
-	UserIDValue       string
-	UserSecretValue   string
-	PlatformAppsValue map[string]PlatformApp
-	DynamoTableValue  string
-	RegionValue       string
+	UserIDValue               string
+	UserSecretValue           string
+	PlatformAppsValue         map[string]PlatformApp
+	DynamoTableValue          string
+	RegionValue               string
+	InitialReadCapacityValue  int
+	InitialWriteCapacityValue int
 }
 
 func (this AWSConfigStruct) UserID() string {
@@ -38,12 +40,22 @@ func (this AWSConfigStruct) Region() string {
 	return this.RegionValue
 }
 
+func (this AWSConfigStruct) InitialReadCapacity() int {
+	return this.InitialReadCapacityValue
+}
+
+func (this AWSConfigStruct) InitialWriteCapacity() int {
+	return this.InitialWriteCapacityValue
+}
+
 type AWSConfig interface {
 	UserID() string
 	UserSecret() string
 	PlatformApps() map[string]PlatformApp
 	DynamoTable() string
 	Region() string
+	InitialReadCapacity() int
+	InitialWriteCapacity() int
 }
 
 func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
@@ -59,5 +71,18 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 	region, err := awsConfig.GetString("default", "region")
 	checkError("Unable to find AWS region", err)
 
-	awsConfigInstance = AWSConfigStruct{userId, userSecret, parsePlatformAppConfig(awsConfig), dynamoTableValue, region}
+	readCapacity, err := awsConfig.GetInt64("default", "dynamo-read-capacity")
+	checkError("Unable to find AWS dynamo-read-capacity", err)
+
+	writeCapacity, err := awsConfig.GetInt64("default", "dynamo-write-capacity")
+	checkError("Unable to find AWS dynamo-write-capacity", err)
+
+	awsConfigInstance = AWSConfigStruct{
+		userId,
+		userSecret,
+		parsePlatformAppConfig(awsConfig),
+		dynamoTableValue,
+		region,
+		int(readCapacity),
+		int(writeCapacity)}
 }

@@ -5,10 +5,94 @@ import (
 	"errors"
 	"github.com/gopns/gopns/com/techtraits/gopns/aws"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 )
+
+func Initilize(
+	userId string,
+	userSecret string,
+	region string,
+	dynamoTable string,
+	initialReadCapacity int,
+	initialWriteCapacity int) error {
+
+	if found, err := findTable(userId, userSecret, region, dynamoTable); err != nil {
+		return err
+	} else if found {
+		return nil
+	} else {
+
+		createTableRequest := CreateTableRequest{
+			[]AttributeDefinition{AttributeDefinition{"alias", "S"}},
+			dynamoTable,
+			[]KeySchema{KeySchema{"alias", "HASH"}},
+			ProvisionedThroughput{initialReadCapacity, initialWriteCapacity}}
+		return createTable(userId, userSecret, region, createTableRequest)
+	}
+
+}
+
+func findTable(userId string, userSecret string, region string, dynamoTable string) (bool, error) {
+	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
+		"{}", "ListTables", userId, userSecret, region)
+
+	if err != nil {
+		return false, err
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		content, _ := ioutil.ReadAll(response.Body)
+		var errorResponse aws.ErrorStruct
+		json.Unmarshal(content, &errorResponse)
+		return false, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+	} else {
+
+		content, _ := ioutil.ReadAll(response.Body)
+		var tableNames = make(map[string][]string)
+		json.Unmarshal(content, &tableNames)
+		for _, tableName := range tableNames["TableNames"] {
+			if tableName == dynamoTable {
+				log.Printf("Found Dynamo Table %s", tableName)
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func createTable(userId string, userSecret string, region string, createTableRequest CreateTableRequest) error {
+
+	query, err := json.Marshal(createTableRequest)
+	if err != nil {
+		return err
+	}
+
+	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
+		string(query[:]), "CreateTable", userId, userSecret, region)
+
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		content, _ := ioutil.ReadAll(response.Body)
+		var errorResponse aws.ErrorStruct
+		json.Unmarshal(content, &errorResponse)
+		return errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+	} else {
+		log.Printf("Created Dynamo Table %s", createTableRequest.TableName)
+	}
+
+	return nil
+}
 
 func UpdateItem(updateItemRequest UpdateItemRequest, userId string,
 	userSecert string, region string) error {
