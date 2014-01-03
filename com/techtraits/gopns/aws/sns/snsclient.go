@@ -3,7 +3,7 @@ package sns
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/usmanismail/gpns/com/techtraits/gpns/aws"
+	"github.com/gopns/gopns/com/techtraits/gopns/aws"
 	"io/ioutil"
 	"net/http"
 	"net/url"

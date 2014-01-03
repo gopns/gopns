@@ -2,8 +2,8 @@ package rest
 
 import (
 	"code.google.com/p/gorest"
-	"github.com/usmanismail/gpns/com/techtraits/gpns/device"
-	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
+	"github.com/gopns/gopns/com/techtraits/gopns/device"
+	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
 	"net/http"
 )
 
@@ -13,5 +13,5 @@ func SetupRestServices() {
 
 	gorest.RegisterService(deviceService)
 	http.Handle("/", gorest.Handle())
-	http.ListenAndServe(":"+gpnsconfig.BaseConfigInstance().Port(), nil)
+	http.ListenAndServe(":"+gopnsconfig.BaseConfigInstance().Port(), nil)
 }

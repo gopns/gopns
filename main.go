@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/usmanismail/gpns/com/techtraits/gpns/gpnsconfig"
-	"github.com/usmanismail/gpns/com/techtraits/gpns/rest"
+	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
+	"github.com/gopns/gopns/com/techtraits/gopns/rest"
 )
 
 func main() {
 
-	appMode := gpnsconfig.ParseConfig()
-	if appMode == gpnsconfig.SERVER_MODE {
+	appMode := gopnsconfig.ParseConfig()
+	if appMode == gopnsconfig.SERVER_MODE {
 		rest.SetupRestServices()
-	} else if appMode == gpnsconfig.REGISTER_MODE {
+	} else if appMode == gopnsconfig.REGISTER_MODE {
 
-	} else if appMode == gpnsconfig.SEND_MODE {
+	} else if appMode == gopnsconfig.SEND_MODE {
 
 	}
 

@@ -7,9 +7,9 @@ GoPNS provides scalable and efficient a mass push notificaiton service built on 
 * Install [Go 1.2](http://golang.org/doc/install#install)
 * Setup GOPATH
 * Add GOPATH/bin to PATH
-* go get gpns
-* go install gpns
-* run gpns
+* go get gopns
+* go install gopns
+* run gopns
 
 ```bash
 mkdir ~/go

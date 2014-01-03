@@ -1,4 +1,4 @@
-package gpnsconfig
+package gopnsconfig
 
 import (
 	"github.com/msbranco/goconfig"
