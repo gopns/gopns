@@ -17,10 +17,10 @@ export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
 go get github.com/gopns/gopns
 go install github.com/gopns/gopns
-gpns
+gopns
 ```
 
-Please see the [Wiki](https://github.com/usmanismail/gpns/wiki) for more information and documentation
+Please see the [Wiki](https://github.com/gopns/gopns/wiki) for more information and documentation
 
 ### Contributors 
 * [Usman Ismail](http://techtraits.com/usman.html)
