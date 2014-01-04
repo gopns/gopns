@@ -37,7 +37,7 @@ func (serv DeviceService) GetDevice(deviceAlias string) Device {
 		config.AWSConfigInstance().Region())
 	restutil.CheckError(err, restError, 500)
 
-	return Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["tags"].SS}
+	return Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 }
 
 func (serv DeviceService) GetDevices(cursor string) DeviceList {
@@ -91,6 +91,7 @@ func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
 	attributeUpdates["arns"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: []string{arn}}}
 	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale}}
 	attributeUpdates["tags"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: device.Tags}}
+	attributeUpdates["platform"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.PlatformApp}}
 
 	updateItemRequest := dynamodb.UpdateItemRequest{
 		Key:              key,
@@ -110,7 +111,7 @@ func convertToDevices(items []map[string]dynamodb.Attribute) []Device {
 
 	devices := make([]Device, 0, 0)
 	for _, item := range items {
-		device := Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["tags"].SS}
+		device := Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 		devices = append(devices, device)
 	}
 

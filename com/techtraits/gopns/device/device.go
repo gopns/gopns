@@ -16,10 +16,11 @@ type DeviceRegistration struct {
 }
 
 type Device struct {
-	Alias  string
-	Locale string
-	Arns   []string
-	Tags   []string
+	Alias    string
+	Locale   string
+	Arns     []string
+	Platform string
+	Tags     []string
 }
 
 type DeviceList struct {
