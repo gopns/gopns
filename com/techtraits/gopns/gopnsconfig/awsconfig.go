@@ -18,6 +18,8 @@ type AWSConfigStruct struct {
 	RegionValue               string
 	InitialReadCapacityValue  int
 	InitialWriteCapacityValue int
+	SqsQueueNameValue         string
+	SqsQueueUrlValue          string
 }
 
 func (this AWSConfigStruct) UserID() string {
@@ -48,6 +50,18 @@ func (this AWSConfigStruct) InitialWriteCapacity() int {
 	return this.InitialWriteCapacityValue
 }
 
+func (this AWSConfigStruct) SqsQueueName() string {
+	return this.SqsQueueNameValue
+}
+
+func (this AWSConfigStruct) SqsQueueUrl() string {
+	return this.SqsQueueUrlValue
+}
+
+func (this AWSConfigStruct) SetSqsQueueUrl(queueUrl string) {
+	this.SqsQueueUrlValue = queueUrl
+}
+
 type AWSConfig interface {
 	UserID() string
 	UserSecret() string
@@ -56,6 +70,9 @@ type AWSConfig interface {
 	Region() string
 	InitialReadCapacity() int
 	InitialWriteCapacity() int
+	SqsQueueName() string
+	SqsQueueUrl() string
+	SetSqsQueueUrl(queueUrl string)
 }
 
 func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
@@ -77,6 +94,9 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 	writeCapacity, err := awsConfig.GetInt64("default", "dynamo-write-capacity")
 	checkError("Unable to find AWS dynamo-write-capacity", err)
 
+	sqsQueueName, err := awsConfig.GetString("default", "sqs-queue-name")
+	checkError("Unable to find AWS sqs-queue-name", err)
+
 	awsConfigInstance = AWSConfigStruct{
 		userId,
 		userSecret,
@@ -84,5 +104,7 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 		dynamoTableValue,
 		region,
 		int(readCapacity),
-		int(writeCapacity)}
+		int(writeCapacity),
+		sqsQueueName,
+		""}
 }
