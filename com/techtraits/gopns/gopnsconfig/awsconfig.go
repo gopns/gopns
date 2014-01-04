@@ -58,8 +58,8 @@ func (this AWSConfigStruct) SqsQueueUrl() string {
 	return this.SqsQueueUrlValue
 }
 
-func (this AWSConfigStruct) SetSqsQueueUrl(queueUrl string) {
-	this.SqsQueueUrlValue = queueUrl
+func (this *AWSConfigStruct) SetSqsQueueUrl(queueUrl string) {
+	(*this).SqsQueueUrlValue = queueUrl
 }
 
 type AWSConfig interface {
@@ -97,7 +97,7 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 	sqsQueueName, err := awsConfig.GetString("default", "sqs-queue-name")
 	checkError("Unable to find AWS sqs-queue-name", err)
 
-	awsConfigInstance = AWSConfigStruct{
+	awsConfigInstance = &AWSConfigStruct{
 		userId,
 		userSecret,
 		parsePlatformAppConfig(awsConfig),

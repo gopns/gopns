@@ -34,6 +34,13 @@ func main() {
 		gopnsconfig.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
 
+	//TODO Just here for testing delete
+	err, _ = sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
+		gopnsconfig.AWSConfigInstance().UserSecret(),
+		gopnsconfig.AWSConfigInstance().Region(),
+		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message")
+	//End TODO
+
 	if appMode == gopnsconfig.SERVER_MODE {
 		rest.SetupRestServices()
 	} else if appMode == gopnsconfig.REGISTER_MODE {
