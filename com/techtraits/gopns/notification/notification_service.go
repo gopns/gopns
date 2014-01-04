@@ -8,6 +8,7 @@ import (
 	"github.com/gopns/gopns/com/techtraits/gopns/device"
 	config "github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
 	"github.com/gopns/gopns/com/techtraits/gopns/rest/restutil"
+	"strings"
 )
 
 type NotificationService struct {
@@ -16,7 +17,7 @@ type NotificationService struct {
 	gorest.RestService `root:"/rest/notification/" consumes:"application/json" produces:"application/json"`
 
 	sendPushNotification gorest.EndPoint `method:"POST" path:"/{deviceAlias:string}" postdata:"Message"`
-	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{locale:string}&{platform:string}&{requiredTags:string}&{skipTags:string}" postdata:"Message"`
+	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{localesParam:string}&{platformdParam:string}&{requiredTagsParam:string}&{skipTagsParam:string}" postdata:"Message"`
 }
 
 func (serv NotificationService) SendPushNotification(message Message, deviceAlias string) {
@@ -60,12 +61,47 @@ func (serv NotificationService) SendPushNotification(message Message, deviceAlia
 
 func (serv NotificationService) SendMassNotification(
 	message Message,
-	locale string,
-	platform string,
-	requiredTags string,
-	skipTags string) {
+	localesParam string,
+	platformsParam string,
+	requiredTagsParam string,
+	skipTagsParam string) {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
 
+	err, _, _, _, _ := parseParameters(
+		message,
+		localesParam,
+		platformsParam,
+		requiredTagsParam,
+		skipTagsParam)
+
+	restutil.CheckError(err, restError, 400)
+}
+
+func parseParameters(message Message, localesParam string, platformsParam string,
+	requiredTagsParam string, skipTagsParam string) (error, []string, []string, []string, []string) {
+
+	if !message.IsValid() {
+		return errors.New("Invalid push notification message"), nil, nil, nil, nil
+	}
+
+	locales := strings.Split(localesParam, ",")
+	platforms := strings.Split(platformsParam, ",")
+	requiredTags := strings.Split(requiredTagsParam, ",")
+	skipTags := strings.Split(skipTagsParam, ",")
+
+	for _, locale := range locales {
+		if err := device.ValidateLocale(locale); err != nil {
+			return err, nil, nil, nil, nil
+		}
+	}
+
+	for _, platform := range platforms {
+		if err := device.ValidatePlatform(platform); err != nil {
+			return err, nil, nil, nil, nil
+		}
+	}
+
+	return nil, locales, platforms, requiredTags, skipTags
 }
