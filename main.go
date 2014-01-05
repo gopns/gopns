@@ -39,6 +39,17 @@ func main() {
 		gopnsconfig.AWSConfigInstance().UserSecret(),
 		gopnsconfig.AWSConfigInstance().Region(),
 		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message")
+
+	sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
+		gopnsconfig.AWSConfigInstance().UserSecret(),
+		gopnsconfig.AWSConfigInstance().Region(),
+		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message 1")
+
+	sqs.DeleteMessages(gopnsconfig.AWSConfigInstance().UserID(),
+		gopnsconfig.AWSConfigInstance().UserSecret(),
+		gopnsconfig.AWSConfigInstance().Region(),
+		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), sqsMessages)
+
 	//End TODO
 
 	if appMode == gopnsconfig.SERVER_MODE {
