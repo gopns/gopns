@@ -16,11 +16,11 @@ type NotificationService struct {
 	//Service level config
 	gorest.RestService `root:"/rest/notification/" consumes:"application/json" produces:"application/json"`
 
-	sendPushNotification gorest.EndPoint `method:"POST" path:"/{deviceAlias:string}" postdata:"Message"`
-	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{localesParam:string}&{platformdParam:string}&{requiredTagsParam:string}&{skipTagsParam:string}" postdata:"Message"`
+	sendPushNotification gorest.EndPoint `method:"POST" path:"/{deviceAlias:string}" postdata:"NotificationMessage"`
+	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{localesParam:string}&{platformdParam:string}&{requiredTagsParam:string}&{skipTagsParam:string}" postdata:"NotificationMessage"`
 }
 
-func (serv NotificationService) SendPushNotification(message Message, deviceAlias string) {
+func (serv NotificationService) SendPushNotification(message NotificationMessage, deviceAlias string) {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
@@ -60,7 +60,7 @@ func (serv NotificationService) SendPushNotification(message Message, deviceAlia
 }
 
 func (serv NotificationService) SendMassNotification(
-	message Message,
+	message NotificationMessage,
 	localesParam string,
 	platformsParam string,
 	requiredTagsParam string,
@@ -79,7 +79,7 @@ func (serv NotificationService) SendMassNotification(
 	restutil.CheckError(err, restError, 400)
 }
 
-func parseParameters(message Message, localesParam string, platformsParam string,
+func parseParameters(message NotificationMessage, localesParam string, platformsParam string,
 	requiredTagsParam string, skipTagsParam string) (error, []string, []string, []string, []string) {
 
 	if !message.IsValid() {

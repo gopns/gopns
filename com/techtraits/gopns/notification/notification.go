@@ -1,11 +1,11 @@
 package notification
 
-type Message struct {
+type NotificationMessage struct {
 	Title   string
 	Message string
 }
 
-func (this Message) IsValid() bool {
+func (this NotificationMessage) IsValid() bool {
 	if len(this.Title) == 0 || len(this.Message) == 0 {
 		return false
 	} else {
