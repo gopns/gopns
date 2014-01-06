@@ -6,6 +6,7 @@ import (
 	"github.com/gopns/gopns/com/techtraits/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/com/techtraits/gopns/aws/sns"
 	"github.com/gopns/gopns/com/techtraits/gopns/device"
+	"github.com/gopns/gopns/com/techtraits/gopns/gopns"
 	config "github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
 	"github.com/gopns/gopns/com/techtraits/gopns/rest/restutil"
 	"strings"
@@ -44,17 +45,7 @@ func (serv NotificationService) SendPushNotification(message NotificationMessage
 		restutil.CheckError(errors.New("Alias not "+deviceAlias+" not found"), restError, 404)
 	} else {
 		device_ := device.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
-		for _, arn := range device_.Arns {
-
-			sns.PublishNotification(
-				arn,
-				message.Title,
-				message.Message,
-				config.AWSConfigInstance().UserID(),
-				config.AWSConfigInstance().UserSecret(),
-				config.AWSConfigInstance().Region(),
-				config.AWSConfigInstance().PlatformApps()[device_.Platform].Type())
-		}
+		gopns.NotificationSender.SendSyncNotification(device, message, 5)
 	}
 
 }
