@@ -1,8 +1,8 @@
 package gopnsapp
 
 import (
-	config "github.com/gopns/gopnsconfig"
-	"github.com/gopns/notification"
+	config "github.com/gopns/gopns/gopnsconfig"
+	"github.com/gopns/gopns/notification"
 	"github.com/stefantalpalaru/pool"
 	"log"
 	"runtime"

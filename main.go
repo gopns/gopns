@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/gopns/aws/dynamodb"
-	"github.com/gopns/aws/sqs"
-	"github.com/gopns/gopnsapp"
-	"github.com/gopns/gopnsconfig"
-	"github.com/gopns/rest"
+	"github.com/gopns/gopns/aws/dynamodb"
+	"github.com/gopns/gopns/aws/sqs"
+	"github.com/gopns/gopns/gopnsapp"
+	"github.com/gopns/gopns/gopnsconfig"
+	"github.com/gopns/gopns/rest"
 	"log"
 )
 

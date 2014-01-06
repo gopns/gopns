@@ -3,12 +3,12 @@ package rest
 import (
 	"code.google.com/p/gorest"
 	"errors"
-	"github.com/gopns/aws/dynamodb"
-	"github.com/gopns/device"
-	"github.com/gopns/gopnsapp"
-	config "github.com/gopns/gopnsconfig"
-	"github.com/gopns/notification"
-	"github.com/gopns/rest/restutil"
+	"github.com/gopns/gopns/aws/dynamodb"
+	"github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/gopnsapp"
+	config "github.com/gopns/gopns/gopnsconfig"
+	"github.com/gopns/gopns/notification"
+	"github.com/gopns/gopns/rest/restutil"
 	"strings"
 )
 

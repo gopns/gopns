@@ -3,7 +3,7 @@ package dynamodb
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gopns/aws"
+	"github.com/gopns/gopns/aws"
 	"io/ioutil"
 	"log"
 	"net/http"
