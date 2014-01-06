@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/gopns/aws/dynamodb"
 	"github.com/gopns/device"
-	"github.com/gopns/gopns"
+	"github.com/gopns/gopnsapp"
 	config "github.com/gopns/gopnsconfig"
 	"github.com/gopns/notification"
 	"github.com/gopns/rest/restutil"
@@ -45,7 +45,7 @@ func (serv NotificationService) SendPushNotification(message notification.Notifi
 		restutil.CheckError(errors.New("Alias not "+deviceAlias+" not found"), restError, 404)
 	} else {
 		device_ := device.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
-		gopns.NotificationSender.SendSyncNotification(device_, message, 5)
+		gopnsapp.NotificationSender.SendSyncNotification(device_, message, 5)
 	}
 
 }

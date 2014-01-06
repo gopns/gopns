@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gopns/aws/dynamodb"
 	"github.com/gopns/aws/sqs"
-	"github.com/gopns/gopns"
+	"github.com/gopns/gopnsapp"
 	"github.com/gopns/gopnsconfig"
 	"github.com/gopns/rest"
 	"log"
@@ -55,7 +55,7 @@ func main() {
 	//END TODO
 
 	// start gopns -- MUST BE STARTED BEFORE ANYTHING ELSE
-	gopns.Start()
+	gopnsapp.Start()
 
 	if appMode == gopnsconfig.SERVER_MODE {
 		rest.SetupRestServices()

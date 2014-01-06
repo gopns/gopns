@@ -1,4 +1,4 @@
-package gopns
+package gopnsapp
 
 import (
 	config "github.com/gopns/gopnsconfig"
