@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gopns/gopns/com/techtraits/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/com/techtraits/gopns/aws/sqs"
-	//"github.com/gopns/gopns/com/techtraits/gopns/gopns"
+	"github.com/gopns/gopns/com/techtraits/gopns/gopns"
 	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
 	"github.com/gopns/gopns/com/techtraits/gopns/rest"
 	"log"
@@ -35,14 +35,27 @@ func main() {
 		gopnsconfig.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
 
+	//TODO Just here for testing delete
+	err, _ = sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
+		gopnsconfig.AWSConfigInstance().UserSecret(),
+		gopnsconfig.AWSConfigInstance().Region(),
+		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message")
+
+	sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
+		gopnsconfig.AWSConfigInstance().UserSecret(),
+		gopnsconfig.AWSConfigInstance().Region(),
+		gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message 1")
+
 	/*
-		//TODO Just here for testing delete
-		err, _ = sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
+		sqs.DeleteMessages(gopnsconfig.AWSConfigInstance().UserID(),
 			gopnsconfig.AWSConfigInstance().UserSecret(),
 			gopnsconfig.AWSConfigInstance().Region(),
-			gopnsconfig.AWSConfigInstance().SqsQueueUrl(), "Test Message")
-		//End TODO
+			gopnsconfig.AWSConfigInstance().SqsQueueUrl(), sqsMessages)
 	*/
+	//END TODO
+
+	// start gopns -- MUST BE STARTED BEFORE ANYTHING ELSE
+	gopns.Start()
 
 	if appMode == gopnsconfig.SERVER_MODE {
 		rest.SetupRestServices()
@@ -52,6 +65,4 @@ func main() {
 
 	}
 
-	// start gopns
-	//gopns.Start()
 }
