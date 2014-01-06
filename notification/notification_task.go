@@ -1,7 +1,7 @@
 package notification
 
 import (
-	"github.com/gopns/gopns/com/techtraits/gopns/device"
+	"github.com/gopns/device"
 )
 
 type NotificationTask struct {

@@ -3,7 +3,7 @@ package sqs
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/gopns/gopns/com/techtraits/gopns/aws"
+	"github.com/gopns/aws"
 	"io/ioutil"
 	"net/http"
 	"net/url"

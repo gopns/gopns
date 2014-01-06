@@ -2,10 +2,10 @@ package device
 
 import (
 	"code.google.com/p/gorest"
-	"github.com/gopns/gopns/com/techtraits/gopns/aws/dynamodb"
-	"github.com/gopns/gopns/com/techtraits/gopns/aws/sns"
-	config "github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
-	"github.com/gopns/gopns/com/techtraits/gopns/rest/restutil"
+	"github.com/gopns/aws/dynamodb"
+	"github.com/gopns/aws/sns"
+	config "github.com/gopns/gopnsconfig"
+	"github.com/gopns/rest/restutil"
 )
 
 type DeviceService struct {

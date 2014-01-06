@@ -2,8 +2,8 @@ package rest
 
 import (
 	"code.google.com/p/gorest"
-	"github.com/gopns/gopns/com/techtraits/gopns/device"
-	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
+	"github.com/gopns/device"
+	"github.com/gopns/gopnsconfig"
 	"net/http"
 )
 

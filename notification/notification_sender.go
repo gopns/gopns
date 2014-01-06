@@ -1,9 +1,9 @@
 package notification
 
 import (
-	"github.com/gopns/gopns/com/techtraits/gopns/aws/sns"
-	"github.com/gopns/gopns/com/techtraits/gopns/device"
-	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
+	"github.com/gopns/aws/sns"
+	"github.com/gopns/device"
+	"github.com/gopns/gopnsconfig"
 	"github.com/stefantalpalaru/pool"
 	"time"
 )
