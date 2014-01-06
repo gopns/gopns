@@ -1,13 +1,13 @@
-package notification
+package rest
 
 import (
 	"code.google.com/p/gorest"
 	"errors"
 	"github.com/gopns/gopns/com/techtraits/gopns/aws/dynamodb"
-	"github.com/gopns/gopns/com/techtraits/gopns/aws/sns"
 	"github.com/gopns/gopns/com/techtraits/gopns/device"
 	"github.com/gopns/gopns/com/techtraits/gopns/gopns"
 	config "github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
+	"github.com/gopns/gopns/com/techtraits/gopns/notification"
 	"github.com/gopns/gopns/com/techtraits/gopns/rest/restutil"
 	"strings"
 )
@@ -21,7 +21,7 @@ type NotificationService struct {
 	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{localesParam:string}&{platformdParam:string}&{requiredTagsParam:string}&{skipTagsParam:string}" postdata:"NotificationMessage"`
 }
 
-func (serv NotificationService) SendPushNotification(message NotificationMessage, deviceAlias string) {
+func (serv NotificationService) SendPushNotification(message notification.NotificationMessage, deviceAlias string) {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
@@ -45,13 +45,13 @@ func (serv NotificationService) SendPushNotification(message NotificationMessage
 		restutil.CheckError(errors.New("Alias not "+deviceAlias+" not found"), restError, 404)
 	} else {
 		device_ := device.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
-		gopns.NotificationSender.SendSyncNotification(device, message, 5)
+		gopns.NotificationSender.SendSyncNotification(device_, message, 5)
 	}
 
 }
 
 func (serv NotificationService) SendMassNotification(
-	message NotificationMessage,
+	message notification.NotificationMessage,
 	localesParam string,
 	platformsParam string,
 	requiredTagsParam string,
@@ -70,7 +70,7 @@ func (serv NotificationService) SendMassNotification(
 	restutil.CheckError(err, restError, 400)
 }
 
-func parseParameters(message NotificationMessage, localesParam string, platformsParam string,
+func parseParameters(message notification.NotificationMessage, localesParam string, platformsParam string,
 	requiredTagsParam string, skipTagsParam string) (error, []string, []string, []string, []string) {
 
 	if !message.IsValid() {

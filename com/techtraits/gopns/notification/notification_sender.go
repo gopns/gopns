@@ -1,60 +1,71 @@
 package notification
 
 import (
+	"github.com/gopns/gopns/com/techtraits/gopns/aws/sns"
+	"github.com/gopns/gopns/com/techtraits/gopns/device"
 	"github.com/gopns/gopns/com/techtraits/gopns/gopnsconfig"
 	"github.com/stefantalpalaru/pool"
+	"time"
 )
 
 type NotificationSender struct {
-	awsConfig  *AWSConfig
-	workerPool *Pool
+	AwsConfig  gopnsconfig.AWSConfig
+	WorkerPool *pool.Pool
 }
 
-func (sender *NotificationSender) SendSyncNotification(device Device, message NotificationMessage, int timeout) int {
-	c := &make(chan int, 1)
+func (sender *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
+	c := make(chan int, 1)
 
-	task := NotificationTask{device: device, message: message, respondTo: c}
-	SendNotification(this, task)
+	task := NotificationTask{device: device, message: message, respondTo: &c}
+	sender.SendNotification(task)
 	select {
 	case status := <-c:
 		return status
-	case <-time.After(timeout * time.Second):
+	case <-time.After(time.Duration(timeout) * time.Second):
 		return 408 //timeout
 	}
 
 }
 
-func (sender *NotificationSender) SendAsyncNotification(device Device, message NotificationMessage) {
+func (sender *NotificationSender) SendAsyncNotification(device device.Device, message NotificationMessage) {
 	task := NotificationTask{device: device, message: message, respondTo: nil}
-	SendNotification(this, task)
+	sender.SendNotification(task)
 }
 
 func (sender *NotificationSender) SendNotification(task NotificationTask) {
-	workerPool.Add(sendNotification, this, task)
+	sender.WorkerPool.Add(notificationWork, sender, task)
 }
 
 //actual function for sending notifications
 
 func (sender *NotificationSender) sendNotification(task NotificationTask) {
 
-	device = task.device
-	message = task.message
+	device_ := task.device
+	message := task.message
 	for _, arn := range device_.Arns {
 
 		sns.PublishNotification(
 			arn,
 			message.Title,
 			message.Message,
-			awsConfig.UserID(),
-			awsConfig.UserSecret(),
-			awsConfig.Region(),
-			awsConfig.PlatformApps()[device_.Platform].Type())
+			sender.AwsConfig.UserID(),
+			sender.AwsConfig.UserSecret(),
+			sender.AwsConfig.Region(),
+			sender.AwsConfig.PlatformApps()[device_.Platform].Type())
 	}
 
 	// send appropriate response code
-	if c := task.respondTo; c != nil {
+	if c := *task.respondTo; c != nil {
 		c <- 202
 	}
 
 	return
+}
+
+// a function closure for passing the job to a worker
+func notificationWork(args ...interface{}) interface{} {
+	sender := args[0].(*NotificationSender)
+	task := args[1].(NotificationTask)
+	sender.sendNotification(task)
+	return nil
 }

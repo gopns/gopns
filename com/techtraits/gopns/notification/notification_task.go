@@ -5,7 +5,7 @@ import (
 )
 
 type NotificationTask struct {
-	message NotificationMessage
-	device Device
+	message   NotificationMessage
+	device    device.Device
 	respondTo *chan int
 }
