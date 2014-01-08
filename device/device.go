@@ -28,7 +28,7 @@ type Device struct {
 
 type DeviceList struct {
 	Devices []Device
-	cursor  string
+	Cursor  string
 }
 
 func (this DeviceRegistration) ValidateLocale() error {

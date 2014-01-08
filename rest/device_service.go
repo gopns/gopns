@@ -1,9 +1,9 @@
-package device
+package rest
 
 import (
 	"code.google.com/p/gorest"
 	"github.com/gopns/gopns/aws/dynamodb"
-	"github.com/gopns/gopns/aws/sns"
+	devicePkg "github.com/gopns/gopns/device"
 	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/rest/restutil"
 )
@@ -22,7 +22,7 @@ type DeviceService struct {
 	deleteDevice   gorest.EndPoint `method:"DELETE" path:"/{alias:string}"`
 }
 
-func (serv DeviceService) GetDevice(deviceAlias string) Device {
+func (serv DeviceService) GetDevice(deviceAlias string) devicePkg.Device {
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
 
@@ -37,10 +37,10 @@ func (serv DeviceService) GetDevice(deviceAlias string) Device {
 		config.AWSConfigInstance().Region())
 	restutil.CheckError(err, restError, 500)
 
-	return Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
+	return devicePkg.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 }
 
-func (serv DeviceService) GetDevices(cursor string) DeviceList {
+func (serv DeviceService) GetDevices(cursor string) devicePkg.DeviceList {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
@@ -65,53 +65,24 @@ func (serv DeviceService) GetDevices(cursor string) DeviceList {
 		cursor = response.LastEvaluatedKey["alias"].S
 	}
 
-	return DeviceList{convertToDevices(response.Items), cursor}
+	return devicePkg.DeviceList{convertToDevices(response.Items), cursor}
 }
 
-func (serv DeviceService) RegisterDevice(device DeviceRegistration) {
+func (serv DeviceService) RegisterDevice(device devicePkg.DeviceRegistration) {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
-
-	err := device.ValidateLocale()
-	restutil.CheckError(err, restError, 400)
-
-	arn, err := sns.RegisterDevice(
-		device.Id,
-		formatTags(device.Locale, device.Alias, device.Tags),
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region(),
-		config.AWSConfigInstance().PlatformApps()[device.PlatformApp].Arn())
-	restutil.CheckError(err, restError, 400)
-
-	key := make(map[string]dynamodb.Attribute)
-	key["alias"] = dynamodb.Attribute{S: device.Alias}
-	attributeUpdates := make(map[string]dynamodb.AttributeUpdate)
-	attributeUpdates["arns"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: []string{arn}}}
-	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale}}
-	attributeUpdates["tags"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: device.Tags}}
-	attributeUpdates["platform"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.PlatformApp}}
-
-	updateItemRequest := dynamodb.UpdateItemRequest{
-		Key:              key,
-		AttributeUpdates: attributeUpdates,
-		TableName:        config.AWSConfigInstance().DynamoTable()}
-	err = dynamodb.UpdateItem(
-		updateItemRequest,
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region())
-	restutil.CheckError(err, restError, 500)
+	err, code := devicePkg.RegistrarInstance().RegisterDevice(device)
+	restutil.CheckError(err, restError, code)
 
 	return
 }
 
-func convertToDevices(items []map[string]dynamodb.Attribute) []Device {
+func convertToDevices(items []map[string]dynamodb.Attribute) []devicePkg.Device {
 
-	devices := make([]Device, 0, 0)
+	devices := make([]devicePkg.Device, 0, 0)
 	for _, item := range items {
-		device := Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
+		device := devicePkg.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 		devices = append(devices, device)
 	}
 
@@ -136,14 +107,4 @@ func (serv DeviceService) DeleteTag(deviceAlias string, tag string) {
 func (serv DeviceService) DeleteArn(deviceAlias string, arn string) {
 
 	return
-}
-
-func formatTags(locale string, alias string, tags []string) string {
-
-	tagString := alias
-	tagString = tagString + "," + locale
-	for _, tag := range tags {
-		tagString = tagString + "," + tag
-	}
-	return tagString
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sqs"
+	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/gopnsapp"
 	"github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/rest"
@@ -34,6 +35,8 @@ func main() {
 		log.Printf("Using SQS Queue %s", sqsQueue.QueueUrl)
 		gopnsconfig.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
+
+	device.InitilizeRegistrar(gopnsconfig.AWSConfigInstance())
 
 	//TODO Just here for testing delete
 	err, _ = sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
