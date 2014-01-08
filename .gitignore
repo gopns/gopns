@@ -28,5 +28,5 @@ _testmain.go
 *.sublime-project
 *.sublime-workspace
 
-config/aws.conf
-config/base.conf
+*aws.conf
+*base.conf
