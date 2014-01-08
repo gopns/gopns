@@ -36,7 +36,7 @@ func main() {
 		gopnsconfig.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
 
-	device.InitilizeRegistrar(gopnsconfig.AWSConfigInstance())
+	device.InitilizeDeviceManager(gopnsconfig.AWSConfigInstance())
 
 	//TODO Just here for testing delete
 	err, _ = sqs.SendMessage(gopnsconfig.AWSConfigInstance().UserID(),
