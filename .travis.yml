@@ -1,6 +1,6 @@
 language: go
 
 go:
-	-1.2
+    -1.2
 
 script:  go get github.com/gopns/gopns && go install github.com/gopns/gopns
