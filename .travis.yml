@@ -3,4 +3,20 @@ language: go
 go:
     1.2
 
-script:  go get github.com/gopns/gopns && go install github.com/gopns/gopns
+install:
+    go get github.com/gopns/gopns
+    go install github.com/gopns/gopns
+
+script: go test ./...
+
+notifications:
+  email:
+  recipients:
+      - usman@techtraits.com
+      - bilalsheikh298@gmail.com
+  on_success: change
+  on_failure: always
+
+
+
+
