@@ -3,10 +3,8 @@ package rest
 import (
 	"code.google.com/p/gorest"
 	"errors"
-	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/gopnsapp"
-	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest/restutil"
 	"strings"
@@ -30,23 +28,9 @@ func (serv NotificationService) SendPushNotification(message notification.Notifi
 		restutil.CheckError(errors.New("Invalid push notification message"), restError, 400)
 	}
 
-	key := make(map[string]dynamodb.Attribute)
-	key["alias"] = dynamodb.Attribute{S: deviceAlias}
-	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: config.AWSConfigInstance().DynamoTable()}
-
-	item, err := dynamodb.GetItem(
-		getItemRequest,
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region())
+	err, device_ := device.DeviceManagerInstance().GetDevice(deviceAlias)
 	restutil.CheckError(err, restError, 500)
-
-	if len(item) == 0 {
-		restutil.CheckError(errors.New("Alias not "+deviceAlias+" not found"), restError, 404)
-	} else {
-		device_ := device.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
-		gopnsapp.NotificationSender.SendSyncNotification(device_, message, 5)
-	}
+	gopnsapp.NotificationSender.SendSyncNotification(*device_, message, 5)
 
 }
 

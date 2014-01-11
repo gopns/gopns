@@ -3,7 +3,6 @@ package notification
 import (
 	"encoding/json"
 	"github.com/gopns/gopns/aws/sqs"
-	"github.com/gopns/gopns/gopnsconfig"
 	"sync"
 )
 
@@ -18,17 +17,17 @@ const (
 )
 
 type SQSNotificationConsumer struct {
-	AwsConfig         gopnsconfig.AWSConfig
+	sqsClient         sqs.SQSClient
 	Sender            *NotificationSender
 	sqsQueueUrl       string
 	processorKillChan chan bool
 	processor_wg      sync.WaitGroup
 }
 
-func NewSQSNotifictionConsumer(queueUrl string, config gopnsconfig.AWSConfig, sender *NotificationSender) (consumer *SQSNotificationConsumer) {
+func NewSQSNotifictionConsumer(queueUrl string, sqsClient sqs.SQSClient, sender *NotificationSender) (consumer *SQSNotificationConsumer) {
 	consumer = new(SQSNotificationConsumer)
 	consumer.sqsQueueUrl = queueUrl
-	consumer.AwsConfig = config
+	consumer.sqsClient = sqsClient
 	consumer.Sender = sender
 	consumer.processorKillChan = make(chan bool, 1)
 	return consumer
@@ -57,12 +56,7 @@ QUEUE_PROCESS_LOOP:
 		default:
 			// consume notificationt tasks from sqs client and use notification sender to distribute work
 
-			_, sqsMessages = sqs.GetMessage(
-				consumer.AwsConfig.UserID(),
-				consumer.AwsConfig.UserSecret(),
-				consumer.AwsConfig.Region(),
-				consumer.sqsQueueUrl,
-				10, 20) //long polling, wait for upto 20 seconds before giving up
+			sqsMessages, _ = consumer.sqsClient.GetMessage(consumer.sqsQueueUrl, 10, 20) //long polling, wait for upto 20 seconds before giving up
 
 			var task NotificationTask
 			for _, sqsMessage := range sqsMessages {
@@ -72,12 +66,7 @@ QUEUE_PROCESS_LOOP:
 			}
 
 			// delete processed notification tasks from queue
-			sqs.DeleteMessages(
-				consumer.AwsConfig.UserID(),
-				consumer.AwsConfig.UserSecret(),
-				consumer.AwsConfig.Region(),
-				consumer.sqsQueueUrl,
-				sqsMessages)
+			consumer.sqsClient.DeleteMessages(consumer.sqsQueueUrl, sqsMessages)
 
 		}
 	}

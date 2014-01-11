@@ -12,17 +12,29 @@ import (
 	"time"
 )
 
+type SQSClientStruct struct {
+	UserId     string
+	UserSecret string
+	Region     string
+}
+
+type SQSClient interface {
+	CreateQueue(queueName string) (*SqsQueue, error)
+	SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error)
+	GetMessage(queueUrl string, messageLimit int, waitTimeSeconds int) ([]SqsMessage, error)
+	DeleteMessage(queueUrl string, receiptHandle string) error
+	DeleteMessages(queueUrl string, messages []SqsMessage) (deletedMessageIds []string, messagesinError []ErrorMessage, err error)
+}
+
 func Initilize(
 	userId string,
 	userSecret string,
-	region string,
-	queueName string) (error, *SqsQueue) {
-
-	return CreateQueue(userId, userSecret, region, queueName)
+	region string) SQSClient {
+	return &SQSClientStruct{userId, userSecret, region}
 
 }
 
-func CreateQueue(userId string, userSecret string, region string, queueName string) (error, *SqsQueue) {
+func (this *SQSClientStruct) CreateQueue(queueName string) (*SqsQueue, error) {
 	values := url.Values{}
 	values.Set("Action", "CreateQueue")
 	values.Set("Version", "2012-11-05")
@@ -32,11 +44,11 @@ func CreateQueue(userId string, userSecret string, region string, queueName stri
 
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest("http://sqs."+region+".amazonaws.com/",
-		values, userId, userSecret, region)
+	response, err := this.makeRequest("http://sqs."+this.Region+".amazonaws.com/",
+		values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -45,27 +57,27 @@ func CreateQueue(userId string, userSecret string, region string, queueName stri
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
-		return errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message), nil
+		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		sqsQueue := new(SqsQueue)
 		xml.Unmarshal(content, &sqsQueue)
-		return nil, sqsQueue
+		return sqsQueue, nil
 	}
 
 }
 
-func SendMessage(userId string, userSecret string, region string, queueUrl string, message string) (error, *SqsSendMessageResponse) {
+func (this *SQSClientStruct) SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error) {
 	values := url.Values{}
 	values.Set("Action", "SendMessage")
 	values.Set("Version", "2012-11-05")
 	values.Set("MessageBody", message)
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest(queueUrl, values, userId, userSecret, region)
+	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -74,23 +86,20 @@ func SendMessage(userId string, userSecret string, region string, queueUrl strin
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
-		return errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message), nil
+		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		msgResp := new(SqsSendMessageResponse)
 		xml.Unmarshal(content, &msgResp)
-		return nil, msgResp
+		return msgResp, nil
 	}
 
 }
 
-func GetMessage(
-	userId string,
-	userSecret string,
-	region string,
+func (this *SQSClientStruct) GetMessage(
 	queueUrl string,
 	messageLimit int,
-	waitTimeSeconds int) (error, []SqsMessage) {
+	waitTimeSeconds int) ([]SqsMessage, error) {
 
 	values := url.Values{}
 	values.Set("Action", "ReceiveMessage")
@@ -100,10 +109,10 @@ func GetMessage(
 	values.Set("WaitTimeSeconds", strconv.Itoa(waitTimeSeconds))
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest(queueUrl, values, userId, userSecret, region)
+	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -112,20 +121,17 @@ func GetMessage(
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
-		return errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message), nil
+		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		var msgResp SqsReceiveMessageResponse
 		xml.Unmarshal(content, &msgResp)
-		return nil, msgResp.SqsMessages
+		return msgResp.SqsMessages, nil
 	}
 
 }
 
-func DeleteMessage(
-	userId string,
-	userSecret string,
-	region string,
+func (this *SQSClientStruct) DeleteMessage(
 	queueUrl string,
 	receiptHandle string) error {
 
@@ -135,7 +141,7 @@ func DeleteMessage(
 	values.Set("ReceiptHandle", receiptHandle)
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest(queueUrl, values, userId, userSecret, region)
+	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
 		return err
@@ -153,12 +159,9 @@ func DeleteMessage(
 	}
 }
 
-func DeleteMessages(
-	userId string,
-	userSecret string,
-	region string,
+func (this *SQSClientStruct) DeleteMessages(
 	queueUrl string,
-	messages []SqsMessage) (err error, deletedMessageIds []string, messagesinError []ErrorMessage) {
+	messages []SqsMessage) (deletedMessageIds []string, messagesinError []ErrorMessage, err error) {
 
 	values := url.Values{}
 	values.Set("Action", "DeleteMessageBatch")
@@ -170,10 +173,10 @@ func DeleteMessages(
 		values.Set("DeleteMessageBatchRequestEntry."+strconv.Itoa(cnt+1)+".ReceiptHandle", message.ReceiptHandle)
 	}
 
-	response, err := makeRequest(queueUrl, values, userId, userSecret, region)
+	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	defer response.Body.Close()
@@ -182,16 +185,16 @@ func DeleteMessages(
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
-		return errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message), nil, nil
+		return nil, nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		var msgResp SqsDeleteMessagesResponse
 		xml.Unmarshal(content, &msgResp)
-		return nil, msgResp.DeletedMessageIds, msgResp.Errors
+		return msgResp.DeletedMessageIds, msgResp.Errors, nil
 	}
 }
 
-func makeRequest(host string, values url.Values, userId string,
+func (this *SQSClientStruct) makeRequest(host string, values url.Values, userId string,
 	userSecret string, region string) (*http.Response, error) {
 
 	url_, err := url.Parse(host)

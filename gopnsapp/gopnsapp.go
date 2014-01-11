@@ -3,7 +3,7 @@ package gopnsapp
 import (
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sqs"
-	"github.com/gopns/gopns/gopnsconfig"
+	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/notification"
 	"github.com/stefantalpalaru/pool"
 	"log"
@@ -11,60 +11,99 @@ import (
 	"time"
 )
 
+type GopnsAppStruct struct {
+	DynamoClient dynamodb.DynamoClient
+	SQSClient    sqs.SQSClient
+}
+type GopnsApp interface {
+	Start()
+}
+
 // gopns package level global state
 var NotificationSender *notification.NotificationSender
 
-func Start() {
+func Initilize() (GopnsApp, error) {
 
-	initAWS()
+	gopnasapp_ := &GopnsAppStruct{}
 
-	var WorkerPool *pool.Pool = startWorkerPool()
+	err := gopnasapp_.initilizeDB()
+	if err != nil {
+		return nil, err
+	}
+
+	err = gopnasapp_.initilizeSQS()
+	if err != nil {
+		return nil, err
+	}
+
+	return gopnasapp_, nil
+}
+
+func (this *GopnsAppStruct) Start() {
+
+	var WorkerPool *pool.Pool = this.startWorkerPool()
 	//setup notification sender
 	NotificationSender = &notification.NotificationSender{
-		AwsConfig:  gopnsconfig.AWSConfigInstance(),
+		AwsConfig:  config.AWSConfigInstance(),
 		WorkerPool: WorkerPool}
 
 	//create a notification consumer
 	var NotificationConsumer notification.NotificationConsumer = notification.NewSQSNotifictionConsumer(
-		gopnsconfig.AWSConfigInstance().SqsQueueUrl(),
-		gopnsconfig.AWSConfigInstance(),
+		config.AWSConfigInstance().SqsQueueUrl(),
+		this.SQSClient,
 		NotificationSender)
 
 	NotificationConsumer.Start()
 }
 
-// for the time being -- will change after aws client changes
-func initAWS() {
-
-	// int aws
-
-	err := dynamodb.Initilize(gopnsconfig.AWSConfigInstance().UserID(),
-		gopnsconfig.AWSConfigInstance().UserSecret(),
-		gopnsconfig.AWSConfigInstance().Region(),
-		gopnsconfig.AWSConfigInstance().DynamoTable(),
-		gopnsconfig.AWSConfigInstance().InitialReadCapacity(),
-		gopnsconfig.AWSConfigInstance().InitialWriteCapacity())
+func (this *GopnsAppStruct) initilizeDB() error {
+	var err error
+	this.DynamoClient, err = dynamodb.Initilize(
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().Region())
 
 	if err != nil {
-		log.Fatalf("Unable to initilize Dynamo DB %s", err.Error())
+		return err
 	}
 
-	// int sqs
-	err, sqsQueue := sqs.Initilize(gopnsconfig.AWSConfigInstance().UserID(),
-		gopnsconfig.AWSConfigInstance().UserSecret(),
-		gopnsconfig.AWSConfigInstance().Region(),
-		gopnsconfig.AWSConfigInstance().SqsQueueName())
+	if found, err := this.DynamoClient.FindTable(config.AWSConfigInstance().DynamoTable()); err != nil {
+		return err
+	} else if found {
+		return nil
+	} else {
 
-	if err != nil {
+		createTableRequest := dynamodb.CreateTableRequest{
+			[]dynamodb.AttributeDefinition{dynamodb.AttributeDefinition{"alias", "S"}},
+			config.AWSConfigInstance().DynamoTable(),
+			[]dynamodb.KeySchema{dynamodb.KeySchema{"alias", "HASH"}},
+			dynamodb.ProvisionedThroughput{
+				config.AWSConfigInstance().InitialReadCapacity(),
+				config.AWSConfigInstance().InitialWriteCapacity()}}
+		return this.DynamoClient.CreateTable(createTableRequest)
+	}
+
+	return err
+}
+
+func (this *GopnsAppStruct) initilizeSQS() error {
+	var err error
+	this.SQSClient = sqs.Initilize(
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().Region())
+
+	if sqsQueue, err := this.SQSClient.CreateQueue(config.AWSConfigInstance().SqsQueueName()); err != nil {
 		log.Fatalf("Unable to initilize SQS %s", err.Error())
 	} else {
 		log.Printf("Using SQS Queue %s", sqsQueue.QueueUrl)
-		gopnsconfig.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
+		config.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
 
+	return err
 }
 
-func startWorkerPool() *pool.Pool {
+func (this *GopnsAppStruct) startWorkerPool() *pool.Pool {
 	//setup a generic worker pool
 	cpus := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpus)

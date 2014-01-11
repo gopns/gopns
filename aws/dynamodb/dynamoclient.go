@@ -11,33 +11,32 @@ import (
 	"strings"
 )
 
+type DynamoClientStruct struct {
+	UserId     string
+	UserSecret string
+	Region     string
+}
+
+type DynamoClient interface {
+	FindTable(dynamoTable string) (bool, error)
+	CreateTable(createTableRequest CreateTableRequest) error
+	UpdateItem(updateItemRequest UpdateItemRequest) error
+	GetItem(getItemRequest GetItemRequest) (map[string]Attribute, error)
+	ScanForItems(scanRequest ScanRequest) (*ScanResponse, error)
+}
+
 func Initilize(
 	userId string,
 	userSecret string,
-	region string,
-	dynamoTable string,
-	initialReadCapacity int,
-	initialWriteCapacity int) error {
+	region string) (DynamoClient, error) {
 
-	if found, err := findTable(userId, userSecret, region, dynamoTable); err != nil {
-		return err
-	} else if found {
-		return nil
-	} else {
-
-		createTableRequest := CreateTableRequest{
-			[]AttributeDefinition{AttributeDefinition{"alias", "S"}},
-			dynamoTable,
-			[]KeySchema{KeySchema{"alias", "HASH"}},
-			ProvisionedThroughput{initialReadCapacity, initialWriteCapacity}}
-		return createTable(userId, userSecret, region, createTableRequest)
-	}
+	return &DynamoClientStruct{UserId: userId, UserSecret: userSecret, Region: region}, nil
 
 }
 
-func findTable(userId string, userSecret string, region string, dynamoTable string) (bool, error) {
-	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
-		"{}", "ListTables", userId, userSecret, region)
+func (this *DynamoClientStruct) FindTable(dynamoTable string) (bool, error) {
+	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+		"{}", "ListTables")
 
 	if err != nil {
 		return false, err
@@ -66,15 +65,15 @@ func findTable(userId string, userSecret string, region string, dynamoTable stri
 	return false, nil
 }
 
-func createTable(userId string, userSecret string, region string, createTableRequest CreateTableRequest) error {
+func (this *DynamoClientStruct) CreateTable(createTableRequest CreateTableRequest) error {
 
 	query, err := json.Marshal(createTableRequest)
 	if err != nil {
 		return err
 	}
 
-	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
-		string(query[:]), "CreateTable", userId, userSecret, region)
+	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+		string(query[:]), "CreateTable")
 
 	if err != nil {
 		return err
@@ -94,16 +93,15 @@ func createTable(userId string, userSecret string, region string, createTableReq
 	return nil
 }
 
-func UpdateItem(updateItemRequest UpdateItemRequest, userId string,
-	userSecert string, region string) error {
+func (this *DynamoClientStruct) UpdateItem(updateItemRequest UpdateItemRequest) error {
 
 	query, err := json.Marshal(updateItemRequest)
 	if err != nil {
 		return err
 	}
 
-	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
-		string(query[:]), "UpdateItem", userId, userSecert, region)
+	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+		string(query[:]), "UpdateItem")
 
 	if err != nil {
 		return err
@@ -121,16 +119,15 @@ func UpdateItem(updateItemRequest UpdateItemRequest, userId string,
 	return nil
 }
 
-func GetItem(getItemRequest GetItemRequest, userId string,
-	userSecert string, region string) (map[string]Attribute, error) {
+func (this *DynamoClientStruct) GetItem(getItemRequest GetItemRequest) (map[string]Attribute, error) {
 
 	query, err := json.Marshal(getItemRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
-		string(query[:]), "GetItem", userId, userSecert, region)
+	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+		string(query[:]), "GetItem")
 
 	if err != nil {
 		return nil, err
@@ -152,16 +149,15 @@ func GetItem(getItemRequest GetItemRequest, userId string,
 
 }
 
-func ScanForItems(scanRequest ScanRequest, userId string,
-	userSecert string, region string) (*ScanResponse, error) {
+func (this *DynamoClientStruct) ScanForItems(scanRequest ScanRequest) (*ScanResponse, error) {
 
 	query, err := json.Marshal(scanRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := makeRequest("http://dynamodb."+region+".amazonaws.com/",
-		string(query[:]), "Scan", userId, userSecert, region)
+	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+		string(query[:]), "Scan")
 
 	if err != nil {
 		return nil, err
@@ -184,8 +180,7 @@ func ScanForItems(scanRequest ScanRequest, userId string,
 
 }
 
-func makeRequest(host string, query string, action string, userId string,
-	userSecret string, region string) (*http.Response, error) {
+func (this *DynamoClientStruct) makeRequest(host string, query string, action string) (*http.Response, error) {
 
 	url_, err := url.Parse(host)
 	if err != nil {
@@ -195,7 +190,7 @@ func makeRequest(host string, query string, action string, userId string,
 	req, err := http.NewRequest("POST", url_.String(), strings.NewReader(query))
 	req.Header.Set("x-amz-target", "DynamoDB_20120810."+action)
 	req.Header.Set("Content-Type", "application/x-amz-json-1.0")
-	aws.SignRequest(req, userId, userSecret, "dynamodb", region)
+	aws.SignRequest(req, this.UserId, this.UserSecret, "dynamodb", this.Region)
 	response, err := http.DefaultClient.Do(req)
 
 	return response, err
