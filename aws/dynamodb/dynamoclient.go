@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gopns/gopns/aws"
+	"github.com/gopns/gopns/metrics"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,10 +36,15 @@ func New(
 }
 
 func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
+
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.findtable")
+	callMeter.Mark(1)
+
 	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
 		"{}", "ListTables")
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return false, err
 	}
 
@@ -48,6 +54,7 @@ func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return false, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 
@@ -61,14 +68,17 @@ func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 			}
 		}
 	}
-
 	return false, nil
 }
 
 func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest) error {
 
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.createtable")
+	callMeter.Mark(1)
+
 	query, err := json.Marshal(createTableRequest)
 	if err != nil {
+		errorMeter.Mark(1)
 		return err
 	}
 
@@ -76,6 +86,7 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 		string(query[:]), "CreateTable")
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return err
 	}
 
@@ -85,6 +96,7 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		log.Printf("Created Dynamo Table %s", createTableRequest.TableName)
@@ -95,8 +107,11 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 
 func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) error {
 
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.updateitem")
+	callMeter.Mark(1)
 	query, err := json.Marshal(updateItemRequest)
 	if err != nil {
+		errorMeter.Mark(1)
 		return err
 	}
 
@@ -104,6 +119,7 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 		string(query[:]), "UpdateItem")
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return err
 	}
 
@@ -113,6 +129,7 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
 	}
 
@@ -121,8 +138,11 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 
 func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[string]Attribute, error) {
 
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.getitem")
+	callMeter.Mark(1)
 	query, err := json.Marshal(getItemRequest)
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -130,6 +150,7 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 		string(query[:]), "GetItem")
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -139,6 +160,7 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -151,8 +173,11 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 
 func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanResponse, error) {
 
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.scanforitem")
+	callMeter.Mark(1)
 	query, err := json.Marshal(scanRequest)
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -160,6 +185,7 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 		string(query[:]), "Scan")
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -169,6 +195,7 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -181,9 +208,11 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 }
 
 func (this *BasicDynamoClient) makeRequest(host string, query string, action string) (*http.Response, error) {
-
+	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.makerequest")
+	callMeter.Mark(1)
 	url_, err := url.Parse(host)
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 

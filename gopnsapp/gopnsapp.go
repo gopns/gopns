@@ -7,6 +7,7 @@ import (
 	"github.com/gopns/gopns/aws/sqs"
 	"github.com/gopns/gopns/device"
 	config "github.com/gopns/gopns/gopnsconfig"
+	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest"
 	"github.com/stefantalpalaru/pool"
@@ -73,6 +74,10 @@ func New() (GopnsApp, error) {
 	gopnasapp_.DeviceManager = device.New(
 		gopnasapp_.SNSClient,
 		gopnasapp_.DynamoClient)
+
+	//
+
+	metrics.StartMetricPrinter()
 
 	return gopnasapp_, nil
 }
