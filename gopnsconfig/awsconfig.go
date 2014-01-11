@@ -1,9 +1,5 @@
 package gopnsconfig
 
-import (
-	"github.com/msbranco/goconfig"
-)
-
 var awsConfigInstance AWSConfig
 
 func AWSConfigInstance() AWSConfig {
@@ -75,7 +71,7 @@ type AWSConfig interface {
 	SetSqsQueueUrl(queueUrl string)
 }
 
-func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
+func parseAwsConfig(awsConfig *ConfigFile) {
 	userId, err := awsConfig.GetString("default", "id")
 	checkError("Unable to find AWS User ID", err)
 
@@ -107,4 +103,5 @@ func parseAwsConfig(awsConfig *goconfig.ConfigFile) {
 		int(writeCapacity),
 		sqsQueueName,
 		""}
+
 }

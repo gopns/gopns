@@ -1,7 +1,6 @@
 package gopnsconfig
 
 import (
-	"github.com/msbranco/goconfig"
 	"log"
 )
 
@@ -41,7 +40,7 @@ type BaseConfig interface {
 	MetricsPrefix() string
 }
 
-func parseBaseConfig(baseConfig *goconfig.ConfigFile) {
+func parseBaseConfig(baseConfig *ConfigFile) {
 	port, err := baseConfig.GetString("default", "port")
 	checkError("Unable to find Server Port", err)
 
@@ -61,4 +60,5 @@ func parseBaseConfig(baseConfig *goconfig.ConfigFile) {
 	}
 
 	baseConfigInstance = BaseConfigStruct{port, metricsServer, metricsKey, metricsPrefix}
+
 }

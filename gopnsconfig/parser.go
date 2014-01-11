@@ -2,8 +2,9 @@ package gopnsconfig
 
 import (
 	"flag"
-	"github.com/msbranco/goconfig"
+	"io"
 	"log"
+	"os"
 )
 
 type APPLICATION_MODE int
@@ -35,16 +36,12 @@ func ParseConfig() APPLICATION_MODE {
 
 	flag.Parse()
 
-	log.Printf("Using base configuration file: %s", base_config_file)
-	baseConfig, err := goconfig.ReadConfigFile(base_config_file)
-	checkError("Unable to parse base config", err)
+	baseConfigReader, err := os.Open(base_config_file)
+	checkError("Unable to read base config file ", err)
+	awsConfigReader, err := os.Open(aws_config_file)
+	checkError("Unable to read aws config file ", err)
 
-	log.Printf("Using aws configuration file: %s", aws_config_file)
-	awsConfig, err := goconfig.ReadConfigFile(aws_config_file)
-	checkError("Unable to parse AWS config", err)
-
-	parseBaseConfig(baseConfig)
-	parseAwsConfig(awsConfig)
+	readConfiguration(baseConfigReader, awsConfigReader)
 
 	if register {
 		log.Printf("Running in client mode, registering devices listed in %s, and printing arns in %s", input_file, output_file)
@@ -56,6 +53,22 @@ func ParseConfig() APPLICATION_MODE {
 		log.Printf("Running in server mode")
 		return SERVER_MODE
 	}
+
+}
+
+func readConfiguration(baseConfigReader io.ReadCloser, awsConfigReader io.ReadCloser) {
+
+	baseConfig, err := ReadConfig(baseConfigReader)
+	checkError("Unable to parse base config", err)
+
+	awsConfig, err := ReadConfig(awsConfigReader)
+	checkError("Unable to parse AWS config", err)
+
+	parseBaseConfig(baseConfig)
+	parseAwsConfig(awsConfig)
+
+	baseConfigReader.Close()
+	awsConfigReader.Close()
 
 }
 

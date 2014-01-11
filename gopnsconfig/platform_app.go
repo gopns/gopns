@@ -1,7 +1,6 @@
 package gopnsconfig
 
 import (
-	"github.com/msbranco/goconfig"
 	"strings"
 )
 
@@ -23,7 +22,7 @@ type PlatformApp interface {
 	Type() string
 }
 
-func parsePlatformAppConfig(awsConfig *goconfig.ConfigFile) map[string]PlatformApp {
+func parsePlatformAppConfig(awsConfig *ConfigFile) map[string]PlatformApp {
 	platformApps, err := awsConfig.GetString("default", "platform-applications")
 	checkError("Unable to find AWS Platform Apps List", err)
 	platformAppsMap := make(map[string]PlatformApp)
