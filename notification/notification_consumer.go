@@ -3,6 +3,7 @@ package notification
 import (
 	"encoding/json"
 	"github.com/gopns/gopns/aws/sqs"
+	"github.com/gopns/gopns/metrics"
 	"sync"
 )
 
@@ -55,12 +56,14 @@ QUEUE_PROCESS_LOOP:
 		case <-this.processorKillChan:
 			break QUEUE_PROCESS_LOOP
 		default:
+
 			// consume notificationt tasks from sqs client and use notification sender to distribute work
-
 			sqsMessages, _ = this.sqsClient.GetMessage(this.sqsQueueUrl, 10, 20) //long polling, wait for upto 20 seconds before giving up
-
+			//TODO CHECK ERROR
 			var task NotificationTask
 			for _, sqsMessage := range sqsMessages {
+				callMeter, _ := metrics.GetCallMeters("notification_consumer.message_consumed")
+				callMeter.Mark(1)
 				_ = json.Unmarshal([]byte(sqsMessage.Body), &task)
 				// TODO enable sending notifications after adding error handling
 				//this.Sender.SendNotification(task)

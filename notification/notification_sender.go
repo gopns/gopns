@@ -4,6 +4,7 @@ import (
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/gopnsconfig"
+	"github.com/gopns/gopns/metrics"
 	"github.com/stefantalpalaru/pool"
 	"time"
 )
@@ -15,6 +16,9 @@ type NotificationSender struct {
 }
 
 func (this *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
+	callMeter, errorMeter := metrics.GetCallMeters("notification_sender.send_sync_notification")
+	callMeter.Mark(1)
+
 	c := make(chan int, 1)
 
 	task := NotificationTask{device: device, message: message, respondTo: &c}
@@ -23,12 +27,15 @@ func (this *NotificationSender) SendSyncNotification(device device.Device, messa
 	case status := <-c:
 		return status
 	case <-time.After(time.Duration(timeout) * time.Second):
+		errorMeter.Mark(1)
 		return 408 //timeout
 	}
 
 }
 
 func (this *NotificationSender) SendAsyncNotification(device device.Device, message NotificationMessage) {
+	callMeter, _ := metrics.GetCallMeters("notification_sender.send_async_notification")
+	callMeter.Mark(1)
 	task := NotificationTask{device: device, message: message, respondTo: nil}
 	this.SendNotification(task)
 }
@@ -44,7 +51,8 @@ func (this *NotificationSender) sendNotification(task NotificationTask) {
 	device_ := task.device
 	message := task.message
 	for _, arn := range device_.Arns {
-
+		callMeter, _ := metrics.GetCallMeters("notification_sender.send_notification")
+		callMeter.Mark(1)
 		this.SnsClient.PublishNotification(
 			arn,
 			message.Title,

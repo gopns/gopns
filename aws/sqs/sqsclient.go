@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"github.com/gopns/gopns/aws"
+	"github.com/gopns/gopns/metrics"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -35,6 +36,10 @@ func New(
 }
 
 func (this *BasicSQSClient) CreateQueue(queueName string) (*SqsQueue, error) {
+
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.create_queue")
+	callMeter.Mark(1)
+
 	values := url.Values{}
 	values.Set("Action", "CreateQueue")
 	values.Set("Version", "2012-11-05")
@@ -48,6 +53,7 @@ func (this *BasicSQSClient) CreateQueue(queueName string) (*SqsQueue, error) {
 		values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -57,6 +63,7 @@ func (this *BasicSQSClient) CreateQueue(queueName string) (*SqsQueue, error) {
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -68,6 +75,10 @@ func (this *BasicSQSClient) CreateQueue(queueName string) (*SqsQueue, error) {
 }
 
 func (this *BasicSQSClient) SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error) {
+
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.send_message")
+	callMeter.Mark(1)
+
 	values := url.Values{}
 	values.Set("Action", "SendMessage")
 	values.Set("Version", "2012-11-05")
@@ -77,6 +88,7 @@ func (this *BasicSQSClient) SendMessage(queueUrl string, message string) (*SqsSe
 	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -86,6 +98,7 @@ func (this *BasicSQSClient) SendMessage(queueUrl string, message string) (*SqsSe
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -101,6 +114,9 @@ func (this *BasicSQSClient) GetMessage(
 	messageLimit int,
 	waitTimeSeconds int) ([]SqsMessage, error) {
 
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.get_message")
+	callMeter.Mark(1)
+
 	values := url.Values{}
 	values.Set("Action", "ReceiveMessage")
 	values.Set("Version", "2012-11-05")
@@ -112,6 +128,7 @@ func (this *BasicSQSClient) GetMessage(
 	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
@@ -121,6 +138,7 @@ func (this *BasicSQSClient) GetMessage(
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -135,6 +153,9 @@ func (this *BasicSQSClient) DeleteMessage(
 	queueUrl string,
 	receiptHandle string) error {
 
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.delete_message")
+	callMeter.Mark(1)
+
 	values := url.Values{}
 	values.Set("Action", "DeleteMessage")
 	values.Set("Version", "2012-11-05")
@@ -144,6 +165,7 @@ func (this *BasicSQSClient) DeleteMessage(
 	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return err
 	}
 
@@ -153,6 +175,7 @@ func (this *BasicSQSClient) DeleteMessage(
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		return nil
@@ -162,6 +185,9 @@ func (this *BasicSQSClient) DeleteMessage(
 func (this *BasicSQSClient) DeleteMessages(
 	queueUrl string,
 	messages []SqsMessage) (deletedMessageIds []string, messagesinError []ErrorMessage, err error) {
+
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.delete_messages")
+	callMeter.Mark(1)
 
 	values := url.Values{}
 	values.Set("Action", "DeleteMessageBatch")
@@ -176,6 +202,7 @@ func (this *BasicSQSClient) DeleteMessages(
 	response, err := this.makeRequest(queueUrl, values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, nil, err
 	}
 
@@ -185,6 +212,7 @@ func (this *BasicSQSClient) DeleteMessages(
 		content, _ := ioutil.ReadAll(response.Body)
 		var errorResponse aws.ErrorResponse
 		xml.Unmarshal(content, &errorResponse)
+		errorMeter.Mark(1)
 		return nil, nil, errors.New("Unable to create queue. " + errorResponse.Error.Code + ": " + errorResponse.Error.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -197,9 +225,13 @@ func (this *BasicSQSClient) DeleteMessages(
 func (this *BasicSQSClient) makeRequest(host string, values url.Values, userId string,
 	userSecret string, region string) (*http.Response, error) {
 
+	callMeter, errorMeter := metrics.GetCallMeters("sqs.make_request")
+	callMeter.Mark(1)
+
 	url_, err := url.Parse(host)
 
 	if err != nil {
+		errorMeter.Mark(1)
 		return nil, err
 	}
 
