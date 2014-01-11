@@ -7,7 +7,7 @@ import (
 )
 
 type NotificationConsumer interface {
-	Start()
+	Start() error
 	Stop()
 }
 
@@ -33,10 +33,11 @@ func NewSQSNotifictionConsumer(queueUrl string, sqsClient sqs.SQSClient, sender 
 	return consumer
 }
 
-func (this *SQSNotificationConsumer) Start() {
+func (this *SQSNotificationConsumer) Start() error {
 	// ToDo check if the queue processor is already running or not
 	this.processor_wg.Add(1)
 	go this.processor()
+	return nil
 }
 
 func (this *SQSNotificationConsumer) Stop() {

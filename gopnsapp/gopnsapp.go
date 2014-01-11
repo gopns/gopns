@@ -1,33 +1,39 @@
 package gopnsapp
 
 import (
+	"code.google.com/p/gorest"
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
 	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/notification"
+	"github.com/gopns/gopns/rest"
 	"github.com/stefantalpalaru/pool"
 	"log"
+	"net/http"
 	"runtime"
 	"time"
 )
 
 type GopnsApp interface {
-	Start()
+	Start() error
 }
 
 type GopnsApplication struct {
-	DynamoClient dynamodb.DynamoClient
-	SQSClient    sqs.SQSClient
-	SNSClient    sns.SNSClient
+	DynamoClient         dynamodb.DynamoClient
+	SQSClient            sqs.SQSClient
+	SNSClient            sns.SNSClient
+	WorkerPool           pool.Pool
+	NotificationSender   notification.NotificationSender
+	NotificationConsumer notification.NotificationConsumer
+	AppMode              config.APPLICATION_MODE
 }
-
-// gopns package level global state
-var NotificationSender *notification.NotificationSender
 
 func New() (GopnsApp, error) {
 
 	gopnasapp_ := &GopnsApplication{}
+
+	gopnasapp_.AppMode = config.ParseConfig()
 
 	err := gopnasapp_.setupDynamoDB()
 	if err != nil {
@@ -44,26 +50,48 @@ func New() (GopnsApp, error) {
 		return nil, err
 	}
 
+	err = gopnasapp_.createWorkerPool()
+	if err != nil {
+		return nil, err
+	}
+
+	//setup notification sender
+	gopnasapp_.NotificationSender = notification.NotificationSender{
+		SnsClient:    gopnasapp_.SNSClient,
+		WorkerPool:   &gopnasapp_.WorkerPool,
+		PlatformApps: config.AWSConfigInstance().PlatformApps()}
+
+	//create a notification consumer
+	gopnasapp_.NotificationConsumer = notification.NewSQSNotifictionConsumer(
+		config.AWSConfigInstance().SqsQueueUrl(),
+		gopnasapp_.SQSClient,
+		&gopnasapp_.NotificationSender)
+
 	return gopnasapp_, nil
 }
 
 // ToDo return appropriate errors
-func (this *GopnsApplication) Start() {
+func (this *GopnsApplication) Start() error {
 
-	var WorkerPool *pool.Pool = this.startWorkerPool()
-	//setup notification sender
-	NotificationSender = &notification.NotificationSender{
-		SnsClient:    this.SNSClient,
-		WorkerPool:   WorkerPool,
-		PlatformApps: config.AWSConfigInstance().PlatformApps()}
+	err := this.runWorkerPool()
+	if err != nil {
+		return err
+	}
 
-	//create a notification consumer
-	var NotificationConsumer notification.NotificationConsumer = notification.NewSQSNotifictionConsumer(
-		config.AWSConfigInstance().SqsQueueUrl(),
-		this.SQSClient,
-		NotificationSender)
+	err = this.NotificationConsumer.Start()
+	if err != nil {
+		return err
+	}
 
-	NotificationConsumer.Start()
+	if this.AppMode == config.SERVER_MODE {
+		this.setupRestServices()
+	} else if this.AppMode == config.REGISTER_MODE {
+
+	} else if this.AppMode == config.SEND_MODE {
+
+	}
+
+	return nil
 }
 
 func (this *GopnsApplication) setupDynamoDB() error {
@@ -127,20 +155,35 @@ func (this *GopnsApplication) setupSNS() error {
 	}
 }
 
-func (this *GopnsApplication) startWorkerPool() *pool.Pool {
-	//setup a generic worker pool
+func (this *GopnsApplication) createWorkerPool() error {
 	cpus := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpus)
-	WorkerPool := pool.New(cpus)
-	WorkerPool.Run()
-	log.Println("Worker pool started with", cpus, "workers")
+	this.WorkerPool = *pool.New(cpus)
+	log.Println("Worker pool created with", cpus, "workers")
+	return nil
+}
+
+func (this *GopnsApplication) runWorkerPool() error {
+	this.WorkerPool.Run()
+	log.Println("Worker pool started")
 	ticker := time.NewTicker(time.Second * 60)
 	go func() {
 		for _ = range ticker.C {
-			status := WorkerPool.Status()
+			status := this.WorkerPool.Status()
 			log.Println(status.Submitted, "submitted jobs,", status.Running, "running,", status.Completed, "completed.")
 		}
 	}()
 
-	return WorkerPool
+	return nil
+}
+
+func (this *GopnsApplication) setupRestServices() {
+
+	notificationService := new(rest.NotificationService)
+	notificationService.NotificationSender = &this.NotificationSender
+
+	gorest.RegisterService(new(rest.DeviceService))
+	gorest.RegisterService(notificationService)
+	http.Handle("/", gorest.Handle())
+	http.ListenAndServe(":"+config.BaseConfigInstance().Port(), nil)
 }

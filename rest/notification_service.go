@@ -4,14 +4,13 @@ import (
 	"code.google.com/p/gorest"
 	"errors"
 	"github.com/gopns/gopns/device"
-	"github.com/gopns/gopns/gopnsapp"
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest/restutil"
 	"strings"
 )
 
 type NotificationService struct {
-
+	NotificationSender *notification.NotificationSender
 	//Service level config
 	gorest.RestService `root:"/rest/notification/" consumes:"application/json" produces:"application/json"`
 
@@ -30,7 +29,7 @@ func (serv NotificationService) SendPushNotification(message notification.Notifi
 
 	err, device_ := device.DeviceManagerInstance().GetDevice(deviceAlias)
 	restutil.CheckError(err, restError, 500)
-	gopnsapp.NotificationSender.SendSyncNotification(*device_, message, 5)
+	serv.NotificationSender.SendSyncNotification(*device_, message, 5)
 
 }
 
