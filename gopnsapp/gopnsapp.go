@@ -77,7 +77,7 @@ func New() (GopnsApp, error) {
 
 	//
 
-	metrics.StartMetricPrinter()
+	gopnasapp_.setupMetrics()
 
 	return gopnasapp_, nil
 }
@@ -165,6 +165,16 @@ func (this *GopnsApplication) setupSNS() error {
 	} else {
 		return nil
 	}
+}
+
+func (this *GopnsApplication) setupMetrics() error {
+
+	metrics.StartGraphiteReporter(
+		config.BaseConfigInstance().MetricsServer(),
+		config.BaseConfigInstance().MetricsAPIKey(),
+		config.BaseConfigInstance().MetricsPrefix())
+
+	return nil
 }
 
 func (this *GopnsApplication) createWorkerPool() error {
