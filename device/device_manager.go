@@ -7,7 +7,8 @@ import (
 )
 
 type DeviceManagerStruct struct {
-	AwsConfig gopnsconfig.AWSConfig
+	AwsConfig    gopnsconfig.AWSConfig
+	DynamoClient dynamodb.DynamoClient
 }
 
 type DeviceManager interface {
@@ -18,8 +19,8 @@ type DeviceManager interface {
 
 var deviceManagerInstance DeviceManager
 
-func InitilizeDeviceManager(config gopnsconfig.AWSConfig) {
-	deviceManagerInstance = &DeviceManagerStruct{config}
+func InitilizeDeviceManager(config gopnsconfig.AWSConfig, dynamoClient dynamodb.DynamoClient) {
+	deviceManagerInstance = &DeviceManagerStruct{config, dynamoClient}
 }
 
 func DeviceManagerInstance() DeviceManager {
@@ -56,11 +57,7 @@ func (this *DeviceManagerStruct) RegisterDevice(device DeviceRegistration) (erro
 		Key:              key,
 		AttributeUpdates: attributeUpdates,
 		TableName:        this.AwsConfig.DynamoTable()}
-	err = dynamodb.UpdateItem(
-		updateItemRequest,
-		this.AwsConfig.UserID(),
-		this.AwsConfig.UserSecret(),
-		this.AwsConfig.Region())
+	err = this.DynamoClient.UpdateItem(updateItemRequest)
 
 	if err != nil {
 		return err, 500
@@ -74,11 +71,7 @@ func (this *DeviceManagerStruct) GetDevice(deviceAlias string) (error, *Device) 
 	key["alias"] = dynamodb.Attribute{S: deviceAlias}
 	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: this.AwsConfig.DynamoTable()}
 
-	item, err := dynamodb.GetItem(
-		getItemRequest,
-		this.AwsConfig.UserID(),
-		this.AwsConfig.UserSecret(),
-		this.AwsConfig.Region())
+	item, err := this.DynamoClient.GetItem(getItemRequest)
 
 	if err == nil {
 		return nil, &Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
@@ -96,11 +89,7 @@ func (this *DeviceManagerStruct) GetDevices(cursor string) (error, *DeviceList) 
 
 	scanRequest := dynamodb.ScanRequest{ExclusiveStartKey: startKey, TableName: this.AwsConfig.DynamoTable(), Limit: 1000}
 
-	response, err := dynamodb.ScanForItems(
-		scanRequest,
-		this.AwsConfig.UserID(),
-		this.AwsConfig.UserSecret(),
-		this.AwsConfig.Region())
+	response, err := this.DynamoClient.ScanForItems(scanRequest)
 	if err == nil {
 		cursor = ""
 		if len(response.LastEvaluatedKey) != 0 {
