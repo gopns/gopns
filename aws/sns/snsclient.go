@@ -11,8 +11,26 @@ import (
 	"time"
 )
 
-func RegisterDevice(token string, customData string, userId string,
-	userSecret string, region string, applicationArn string) (arn string, err error) {
+type SNSClient interface {
+	RegisterDevice(token string, customData string, applicationArn string) (arn string, err error)
+	PublishNotification(arn string, title string, message string, applicationType string) (err error)
+}
+
+type BasicSNSClient struct {
+	UserId     string
+	UserSecret string
+	Region     string
+}
+
+func New(
+	userId string,
+	userSecret string,
+	region string) (SNSClient, error) {
+	return &BasicSNSClient{userId, userSecret, region}, nil
+
+}
+
+func (this *BasicSNSClient) RegisterDevice(token string, customData string, applicationArn string) (arn string, err error) {
 	values := url.Values{}
 	values.Set("Action", "CreatePlatformEndpoint")
 	values.Set("CustomUserData", customData)
@@ -20,8 +38,8 @@ func RegisterDevice(token string, customData string, userId string,
 	values.Set("PlatformApplicationArn", applicationArn)
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest("http://sns."+region+".amazonaws.com/",
-		values, userId, userSecret, region)
+	response, err := makeRequest("http://sns."+this.Region+".amazonaws.com/",
+		values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
 		return "", err
@@ -42,8 +60,7 @@ func RegisterDevice(token string, customData string, userId string,
 	}
 }
 
-func PublishNotification(arn string, title string, message string, userId string,
-	userSecret string, region string, applicationType string) (err error) {
+func (this *BasicSNSClient) PublishNotification(arn string, title string, message string, applicationType string) (err error) {
 
 	values := url.Values{}
 	values.Set("Action", "Publish")
@@ -52,8 +69,8 @@ func PublishNotification(arn string, title string, message string, userId string
 	values.Set("TargetArn", arn)
 	values.Set("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	response, err := makeRequest("http://sns."+region+".amazonaws.com/",
-		values, userId, userSecret, region)
+	response, err := makeRequest("http://sns."+this.Region+".amazonaws.com/",
+		values, this.UserId, this.UserSecret, this.Region)
 
 	if err != nil {
 		return err

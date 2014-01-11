@@ -9,15 +9,16 @@ import (
 )
 
 type NotificationSender struct {
-	AwsConfig  gopnsconfig.AWSConfig
-	WorkerPool *pool.Pool
+	SnsClient    sns.SNSClient
+	WorkerPool   *pool.Pool
+	PlatformApps map[string]gopnsconfig.PlatformApp
 }
 
-func (sender *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
+func (this *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
 	c := make(chan int, 1)
 
 	task := NotificationTask{device: device, message: message, respondTo: &c}
-	sender.SendNotification(task)
+	this.SendNotification(task)
 	select {
 	case status := <-c:
 		return status
@@ -27,31 +28,28 @@ func (sender *NotificationSender) SendSyncNotification(device device.Device, mes
 
 }
 
-func (sender *NotificationSender) SendAsyncNotification(device device.Device, message NotificationMessage) {
+func (this *NotificationSender) SendAsyncNotification(device device.Device, message NotificationMessage) {
 	task := NotificationTask{device: device, message: message, respondTo: nil}
-	sender.SendNotification(task)
+	this.SendNotification(task)
 }
 
-func (sender *NotificationSender) SendNotification(task NotificationTask) {
-	sender.WorkerPool.Add(notificationWork, sender, task)
+func (this *NotificationSender) SendNotification(task NotificationTask) {
+	this.WorkerPool.Add(notificationWork, this, task)
 }
 
 //actual function for sending notifications
 
-func (sender *NotificationSender) sendNotification(task NotificationTask) {
+func (this *NotificationSender) sendNotification(task NotificationTask) {
 
 	device_ := task.device
 	message := task.message
 	for _, arn := range device_.Arns {
 
-		sns.PublishNotification(
+		this.SnsClient.PublishNotification(
 			arn,
 			message.Title,
 			message.Message,
-			sender.AwsConfig.UserID(),
-			sender.AwsConfig.UserSecret(),
-			sender.AwsConfig.Region(),
-			sender.AwsConfig.PlatformApps()[device_.Platform].Type())
+			this.PlatformApps[device_.Platform].Type())
 	}
 
 	// send appropriate response code

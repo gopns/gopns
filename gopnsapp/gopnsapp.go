@@ -2,6 +2,7 @@ package gopnsapp
 
 import (
 	"github.com/gopns/gopns/aws/dynamodb"
+	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
 	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/notification"
@@ -18,6 +19,7 @@ type GopnsApp interface {
 type GopnsApplication struct {
 	DynamoClient dynamodb.DynamoClient
 	SQSClient    sqs.SQSClient
+	SNSClient    sns.SNSClient
 }
 
 // gopns package level global state
@@ -37,6 +39,11 @@ func New() (GopnsApp, error) {
 		return nil, err
 	}
 
+	err = gopnasapp_.setupSNS()
+	if err != nil {
+		return nil, err
+	}
+
 	return gopnasapp_, nil
 }
 
@@ -46,8 +53,9 @@ func (this *GopnsApplication) Start() {
 	var WorkerPool *pool.Pool = this.startWorkerPool()
 	//setup notification sender
 	NotificationSender = &notification.NotificationSender{
-		AwsConfig:  config.AWSConfigInstance(),
-		WorkerPool: WorkerPool}
+		SnsClient:    this.SNSClient,
+		WorkerPool:   WorkerPool,
+		PlatformApps: config.AWSConfigInstance().PlatformApps()}
 
 	//create a notification consumer
 	var NotificationConsumer notification.NotificationConsumer = notification.NewSQSNotifictionConsumer(
@@ -103,6 +111,20 @@ func (this *GopnsApplication) setupSQS() error {
 	}
 
 	return err
+}
+
+func (this *GopnsApplication) setupSNS() error {
+	var err error
+	this.SNSClient, err = sns.New(
+		config.AWSConfigInstance().UserID(),
+		config.AWSConfigInstance().UserSecret(),
+		config.AWSConfigInstance().Region())
+
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
 
 func (this *GopnsApplication) startWorkerPool() *pool.Pool {
