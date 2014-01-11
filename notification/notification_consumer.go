@@ -33,42 +33,42 @@ func NewSQSNotifictionConsumer(queueUrl string, sqsClient sqs.SQSClient, sender 
 	return consumer
 }
 
-func (consumer *SQSNotificationConsumer) Start() {
+func (this *SQSNotificationConsumer) Start() {
 	// ToDo check if the queue processor is already running or not
-	consumer.processor_wg.Add(1)
-	go consumer.processor()
+	this.processor_wg.Add(1)
+	go this.processor()
 }
 
-func (consumer *SQSNotificationConsumer) Stop() {
-	consumer.processorKillChan <- true
-	consumer.processor_wg.Wait()
+func (this *SQSNotificationConsumer) Stop() {
+	this.processorKillChan <- true
+	this.processor_wg.Wait()
 }
 
-func (consumer *SQSNotificationConsumer) processor() {
+func (this *SQSNotificationConsumer) processor() {
 
 	var sqsMessages []sqs.SqsMessage
 QUEUE_PROCESS_LOOP:
 	for {
 		select {
 		// stopping
-		case <-consumer.processorKillChan:
+		case <-this.processorKillChan:
 			break QUEUE_PROCESS_LOOP
 		default:
 			// consume notificationt tasks from sqs client and use notification sender to distribute work
 
-			sqsMessages, _ = consumer.sqsClient.GetMessage(consumer.sqsQueueUrl, 10, 20) //long polling, wait for upto 20 seconds before giving up
+			sqsMessages, _ = this.sqsClient.GetMessage(this.sqsQueueUrl, 10, 20) //long polling, wait for upto 20 seconds before giving up
 
 			var task NotificationTask
 			for _, sqsMessage := range sqsMessages {
 				_ = json.Unmarshal([]byte(sqsMessage.Body), &task)
 				// TODO enable sending notifications after adding error handling
-				//consumer.Sender.SendNotification(task)
+				//this.Sender.SendNotification(task)
 			}
 
 			// delete processed notification tasks from queue
-			consumer.sqsClient.DeleteMessages(consumer.sqsQueueUrl, sqsMessages)
+			this.sqsClient.DeleteMessages(this.sqsQueueUrl, sqsMessages)
 
 		}
 	}
-	consumer.processor_wg.Done()
+	this.processor_wg.Done()
 }
