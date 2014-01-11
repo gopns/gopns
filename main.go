@@ -11,8 +11,7 @@ func main() {
 
 	appMode := gopnsconfig.ParseConfig()
 
-	// start gopns -- MUST BE STARTED BEFORE ANYTHING ELSE
-	gopnsapp_, err := gopnsapp.Initilize()
+	gopnsapp_, err := gopnsapp.New()
 	if err == nil {
 		gopnsapp_.Start()
 

@@ -11,27 +11,28 @@ import (
 	"time"
 )
 
-type GopnsAppStruct struct {
-	DynamoClient dynamodb.DynamoClient
-	SQSClient    sqs.SQSClient
-}
 type GopnsApp interface {
 	Start()
+}
+
+type GopnsApplication struct {
+	DynamoClient dynamodb.DynamoClient
+	SQSClient    sqs.SQSClient
 }
 
 // gopns package level global state
 var NotificationSender *notification.NotificationSender
 
-func Initilize() (GopnsApp, error) {
+func New() (GopnsApp, error) {
 
-	gopnasapp_ := &GopnsAppStruct{}
+	gopnasapp_ := &GopnsApplication{}
 
-	err := gopnasapp_.initilizeDB()
+	err := gopnasapp_.setupDynamoDB()
 	if err != nil {
 		return nil, err
 	}
 
-	err = gopnasapp_.initilizeSQS()
+	err = gopnasapp_.setupSQS()
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,8 @@ func Initilize() (GopnsApp, error) {
 	return gopnasapp_, nil
 }
 
-func (this *GopnsAppStruct) Start() {
+// ToDo return appropriate errors
+func (this *GopnsApplication) Start() {
 
 	var WorkerPool *pool.Pool = this.startWorkerPool()
 	//setup notification sender
@@ -56,9 +58,9 @@ func (this *GopnsAppStruct) Start() {
 	NotificationConsumer.Start()
 }
 
-func (this *GopnsAppStruct) initilizeDB() error {
+func (this *GopnsApplication) setupDynamoDB() error {
 	var err error
-	this.DynamoClient, err = dynamodb.Initilize(
+	this.DynamoClient, err = dynamodb.New(
 		config.AWSConfigInstance().UserID(),
 		config.AWSConfigInstance().UserSecret(),
 		config.AWSConfigInstance().Region())
@@ -86,9 +88,9 @@ func (this *GopnsAppStruct) initilizeDB() error {
 	return err
 }
 
-func (this *GopnsAppStruct) initilizeSQS() error {
+func (this *GopnsApplication) setupSQS() error {
 	var err error
-	this.SQSClient = sqs.Initilize(
+	this.SQSClient = sqs.New(
 		config.AWSConfigInstance().UserID(),
 		config.AWSConfigInstance().UserSecret(),
 		config.AWSConfigInstance().Region())
@@ -103,7 +105,7 @@ func (this *GopnsAppStruct) initilizeSQS() error {
 	return err
 }
 
-func (this *GopnsAppStruct) startWorkerPool() *pool.Pool {
+func (this *GopnsApplication) startWorkerPool() *pool.Pool {
 	//setup a generic worker pool
 	cpus := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpus)

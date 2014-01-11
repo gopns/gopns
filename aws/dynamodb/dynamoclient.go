@@ -11,12 +11,6 @@ import (
 	"strings"
 )
 
-type DynamoClientStruct struct {
-	UserId     string
-	UserSecret string
-	Region     string
-}
-
 type DynamoClient interface {
 	FindTable(dynamoTable string) (bool, error)
 	CreateTable(createTableRequest CreateTableRequest) error
@@ -25,16 +19,22 @@ type DynamoClient interface {
 	ScanForItems(scanRequest ScanRequest) (*ScanResponse, error)
 }
 
-func Initilize(
+type BasicDynamoClient struct {
+	UserId     string
+	UserSecret string
+	Region     string
+}
+
+func New(
 	userId string,
 	userSecret string,
 	region string) (DynamoClient, error) {
 
-	return &DynamoClientStruct{UserId: userId, UserSecret: userSecret, Region: region}, nil
+	return &BasicDynamoClient{UserId: userId, UserSecret: userSecret, Region: region}, nil
 
 }
 
-func (this *DynamoClientStruct) FindTable(dynamoTable string) (bool, error) {
+func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
 		"{}", "ListTables")
 
@@ -65,7 +65,7 @@ func (this *DynamoClientStruct) FindTable(dynamoTable string) (bool, error) {
 	return false, nil
 }
 
-func (this *DynamoClientStruct) CreateTable(createTableRequest CreateTableRequest) error {
+func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest) error {
 
 	query, err := json.Marshal(createTableRequest)
 	if err != nil {
@@ -93,7 +93,7 @@ func (this *DynamoClientStruct) CreateTable(createTableRequest CreateTableReques
 	return nil
 }
 
-func (this *DynamoClientStruct) UpdateItem(updateItemRequest UpdateItemRequest) error {
+func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) error {
 
 	query, err := json.Marshal(updateItemRequest)
 	if err != nil {
@@ -119,7 +119,7 @@ func (this *DynamoClientStruct) UpdateItem(updateItemRequest UpdateItemRequest) 
 	return nil
 }
 
-func (this *DynamoClientStruct) GetItem(getItemRequest GetItemRequest) (map[string]Attribute, error) {
+func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[string]Attribute, error) {
 
 	query, err := json.Marshal(getItemRequest)
 	if err != nil {
@@ -149,7 +149,7 @@ func (this *DynamoClientStruct) GetItem(getItemRequest GetItemRequest) (map[stri
 
 }
 
-func (this *DynamoClientStruct) ScanForItems(scanRequest ScanRequest) (*ScanResponse, error) {
+func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanResponse, error) {
 
 	query, err := json.Marshal(scanRequest)
 	if err != nil {
@@ -180,7 +180,7 @@ func (this *DynamoClientStruct) ScanForItems(scanRequest ScanRequest) (*ScanResp
 
 }
 
-func (this *DynamoClientStruct) makeRequest(host string, query string, action string) (*http.Response, error) {
+func (this *BasicDynamoClient) makeRequest(host string, query string, action string) (*http.Response, error) {
 
 	url_, err := url.Parse(host)
 	if err != nil {

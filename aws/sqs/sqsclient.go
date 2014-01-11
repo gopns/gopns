@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-type SQSClientStruct struct {
-	UserId     string
-	UserSecret string
-	Region     string
-}
-
 type SQSClient interface {
 	CreateQueue(queueName string) (*SqsQueue, error)
 	SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error)
@@ -26,15 +20,21 @@ type SQSClient interface {
 	DeleteMessages(queueUrl string, messages []SqsMessage) (deletedMessageIds []string, messagesinError []ErrorMessage, err error)
 }
 
-func Initilize(
+type BasicSQSClient struct {
+	UserId     string
+	UserSecret string
+	Region     string
+}
+
+func New(
 	userId string,
 	userSecret string,
 	region string) SQSClient {
-	return &SQSClientStruct{userId, userSecret, region}
+	return &BasicSQSClient{userId, userSecret, region}
 
 }
 
-func (this *SQSClientStruct) CreateQueue(queueName string) (*SqsQueue, error) {
+func (this *BasicSQSClient) CreateQueue(queueName string) (*SqsQueue, error) {
 	values := url.Values{}
 	values.Set("Action", "CreateQueue")
 	values.Set("Version", "2012-11-05")
@@ -67,7 +67,7 @@ func (this *SQSClientStruct) CreateQueue(queueName string) (*SqsQueue, error) {
 
 }
 
-func (this *SQSClientStruct) SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error) {
+func (this *BasicSQSClient) SendMessage(queueUrl string, message string) (*SqsSendMessageResponse, error) {
 	values := url.Values{}
 	values.Set("Action", "SendMessage")
 	values.Set("Version", "2012-11-05")
@@ -96,7 +96,7 @@ func (this *SQSClientStruct) SendMessage(queueUrl string, message string) (*SqsS
 
 }
 
-func (this *SQSClientStruct) GetMessage(
+func (this *BasicSQSClient) GetMessage(
 	queueUrl string,
 	messageLimit int,
 	waitTimeSeconds int) ([]SqsMessage, error) {
@@ -131,7 +131,7 @@ func (this *SQSClientStruct) GetMessage(
 
 }
 
-func (this *SQSClientStruct) DeleteMessage(
+func (this *BasicSQSClient) DeleteMessage(
 	queueUrl string,
 	receiptHandle string) error {
 
@@ -159,7 +159,7 @@ func (this *SQSClientStruct) DeleteMessage(
 	}
 }
 
-func (this *SQSClientStruct) DeleteMessages(
+func (this *BasicSQSClient) DeleteMessages(
 	queueUrl string,
 	messages []SqsMessage) (deletedMessageIds []string, messagesinError []ErrorMessage, err error) {
 
@@ -194,7 +194,7 @@ func (this *SQSClientStruct) DeleteMessages(
 	}
 }
 
-func (this *SQSClientStruct) makeRequest(host string, values url.Values, userId string,
+func (this *BasicSQSClient) makeRequest(host string, values url.Values, userId string,
 	userSecret string, region string) (*http.Response, error) {
 
 	url_, err := url.Parse(host)

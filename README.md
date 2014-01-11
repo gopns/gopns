@@ -22,5 +22,7 @@ gopns
 
 Please see the [Wiki](https://github.com/gopns/gopns/wiki) for more information and documentation
 
-### Contributors 
+### Authors 
 * [Usman Ismail](http://techtraits.com/usman.html)
+* [Bilal Sheikh](http://techtraits.com/bilal.html)
+
