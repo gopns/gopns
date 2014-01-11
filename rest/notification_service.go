@@ -11,6 +11,7 @@ import (
 
 type NotificationService struct {
 	NotificationSender *notification.NotificationSender
+	DeviceManager      device.DeviceManager
 	//Service level config
 	gorest.RestService `root:"/rest/notification/" consumes:"application/json" produces:"application/json"`
 
@@ -27,7 +28,7 @@ func (serv NotificationService) SendPushNotification(message notification.Notifi
 		restutil.CheckError(errors.New("Invalid push notification message"), restError, 400)
 	}
 
-	err, device_ := device.DeviceManagerInstance().GetDevice(deviceAlias)
+	err, device_ := serv.DeviceManager.GetDevice(deviceAlias)
 	restutil.CheckError(err, restError, 500)
 	serv.NotificationSender.SendSyncNotification(*device_, message, 5)
 

@@ -5,6 +5,7 @@ import (
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
+	"github.com/gopns/gopns/device"
 	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest"
@@ -27,6 +28,7 @@ type GopnsApplication struct {
 	NotificationSender   notification.NotificationSender
 	NotificationConsumer notification.NotificationConsumer
 	AppMode              config.APPLICATION_MODE
+	DeviceManager        device.DeviceManager
 }
 
 func New() (GopnsApp, error) {
@@ -66,6 +68,11 @@ func New() (GopnsApp, error) {
 		config.AWSConfigInstance().SqsQueueUrl(),
 		gopnasapp_.SQSClient,
 		&gopnasapp_.NotificationSender)
+
+	//create a device manager
+	gopnasapp_.DeviceManager = device.New(
+		gopnasapp_.SNSClient,
+		gopnasapp_.DynamoClient)
 
 	return gopnasapp_, nil
 }
@@ -181,8 +188,12 @@ func (this *GopnsApplication) setupRestServices() {
 
 	notificationService := new(rest.NotificationService)
 	notificationService.NotificationSender = &this.NotificationSender
+	notificationService.DeviceManager = this.DeviceManager
 
-	gorest.RegisterService(new(rest.DeviceService))
+	deviceService := new(rest.DeviceService)
+	deviceService.DeviceManager = this.DeviceManager
+
+	gorest.RegisterService(deviceService)
 	gorest.RegisterService(notificationService)
 	http.Handle("/", gorest.Handle())
 	http.ListenAndServe(":"+config.BaseConfigInstance().Port(), nil)

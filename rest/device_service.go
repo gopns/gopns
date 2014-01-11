@@ -7,6 +7,7 @@ import (
 )
 
 type DeviceService struct {
+	DeviceManager devicePkg.DeviceManager
 
 	//Service level config
 	gorest.RestService `root:"/rest/device/" consumes:"application/json" produces:"application/json"`
@@ -23,7 +24,7 @@ type DeviceService struct {
 func (serv DeviceService) GetDevice(deviceAlias string) devicePkg.Device {
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
-	err, device := devicePkg.DeviceManagerInstance().GetDevice(deviceAlias)
+	err, device := serv.DeviceManager.GetDevice(deviceAlias)
 	restutil.CheckError(err, restError, 500)
 	return *device
 
@@ -34,7 +35,7 @@ func (serv DeviceService) GetDevices(cursor string) devicePkg.DeviceList {
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
 
-	err, deviceList := devicePkg.DeviceManagerInstance().GetDevices(cursor)
+	err, deviceList := serv.DeviceManager.GetDevices(cursor)
 	restutil.CheckError(err, restError, 500)
 	return *deviceList
 }
@@ -43,7 +44,7 @@ func (serv DeviceService) RegisterDevice(device devicePkg.DeviceRegistration) {
 
 	restError := restutil.GetRestError(serv.ResponseBuilder())
 	defer restutil.HandleErrors(restError)
-	err, code := devicePkg.DeviceManagerInstance().RegisterDevice(device)
+	err, code := serv.DeviceManager.RegisterDevice(device)
 	restutil.CheckError(err, restError, code)
 
 	return

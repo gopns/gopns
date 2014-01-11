@@ -19,17 +19,12 @@ type DefaultDeviceManager struct {
 	DynamoTable  string
 }
 
-var deviceManagerInstance DeviceManager
-
-func InitilizeDeviceManager(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient) {
-	deviceManagerInstance = &DefaultDeviceManager{
+func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient) DeviceManager {
+	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,
 		gopnsconfig.AWSConfigInstance().PlatformApps(),
 		gopnsconfig.AWSConfigInstance().DynamoTable()}
-}
-
-func DeviceManagerInstance() DeviceManager {
 	return deviceManagerInstance
 }
 
