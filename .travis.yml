@@ -5,10 +5,6 @@ go:
 
 install:
     - go get github.com/gopns/gopns
-    - go get code.google.com/p/gorest
-    - go install code.google.com/p/gorest
-    - go get github.com/emicklei/go-restful
-    - go install github.com/emicklei/go-restful
     - go install github.com/gopns/gopns
 
 script: go test ./...
