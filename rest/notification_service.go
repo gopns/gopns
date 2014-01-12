@@ -1,40 +1,73 @@
 package rest
 
 import (
-	"code.google.com/p/gorest"
-	"errors"
+	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/notification"
-	"github.com/gopns/gopns/rest/restutil"
-	"strings"
+	"net/http"
 )
 
 type NotificationService struct {
 	NotificationSender *notification.NotificationSender
 	DeviceManager      device.DeviceManager
-	//Service level config
-	gorest.RestService `root:"/rest/notification/" consumes:"application/json" produces:"application/json"`
-
-	sendPushNotification gorest.EndPoint `method:"POST" path:"/{deviceAlias:string}" postdata:"NotificationMessage"`
-	sendMassNotification gorest.EndPoint `method:"POST" path:"/?{localesParam:string}&{platformdParam:string}&{requiredTagsParam:string}&{skipTagsParam:string}" postdata:"NotificationMessage"`
 }
 
-func (serv NotificationService) SendPushNotification(message notification.NotificationMessage, deviceAlias string) {
+func (serv *NotificationService) Register(container *restful.Container, rootPath string) {
+	ws := new(restful.WebService)
+	ws.
+		Path(rootPath + "/notification").
+		Consumes(restful.MIME_JSON).
+		Produces(restful.MIME_JSON) // you can specify this per route as well
 
-	restError := restutil.GetRestError(serv.ResponseBuilder())
-	defer restutil.HandleErrors(restError)
+	ws.Route(ws.POST("/{deviceAlias}").To(serv.sendPushNotification).
+		// docs
+		Doc("send a push notification to the device by alias").
+		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
+		Reads(notification.NotificationMessage{})) // from the request
 
-	if !message.IsValid() {
-		restutil.CheckError(errors.New("Invalid push notification message"), restError, 400)
+	/*
+		ws.Route(ws.POST("/").To(serv.sendMassNotification).
+			// docs
+			Doc("send mass push notifications to all users").
+			Param(ws.QueryParameter("localesParam", "specify the locale").DataType("string")).
+			Param(ws.QueryParameter("platformParam", "specify the platform").DataType("string")).
+			Param(ws.QueryParameter("requiredTagsParam", "tags which must be set for a user, used for segmentation").DataType("string")).
+			Param(ws.QueryParameter("skipTagsParam", "tags to skip for segmentation ").DataType("string")).
+			Reads(notification.NotificationMessage{})) // from the request
+	*/
+	container.Add(ws)
+}
+
+func (serv *NotificationService) sendPushNotification(request *restful.Request, response *restful.Response) {
+
+	alias := request.PathParameter("deviceAlias")
+	err, device_ := serv.DeviceManager.GetDevice(alias)
+	if err != nil {
+		//ToDo use json error messages and appropriate error handling
+		response.AddHeader("Content-Type", "text/plain")
+		response.WriteErrorString(http.StatusNotFound, "Device not found.")
 	}
 
-	err, device_ := serv.DeviceManager.GetDevice(deviceAlias)
-	restutil.CheckError(err, restError, 500)
-	serv.NotificationSender.SendSyncNotification(*device_, message, 5)
+	message := new(notification.NotificationMessage)
+	err = request.ReadEntity(message)
+	if err != nil {
+		//ToDo use json error messages and appropriate error handling
+		response.AddHeader("Content-Type", "text/plain")
+		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+	}
+
+	if !message.IsValid() {
+		//ToDo use json error messages and appropriate error handling
+		response.AddHeader("Content-Type", "text/plain")
+		response.WriteErrorString(http.StatusBadRequest, "Invalid push notification message")
+	}
+
+	serv.NotificationSender.SendSyncNotification(*device_, *message, 5)
 
 }
 
-func (serv NotificationService) SendMassNotification(
+/*
+func (serv NotificationService) sendMassNotification(
 	message notification.NotificationMessage,
 	localesParam string,
 	platformsParam string,
@@ -80,3 +113,4 @@ func parseParameters(message notification.NotificationMessage, localesParam stri
 
 	return nil, locales, platforms, requiredTags, skipTags
 }
+*/

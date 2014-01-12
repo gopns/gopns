@@ -1,7 +1,7 @@
 package gopnsapp
 
 import (
-	"code.google.com/p/gorest"
+	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
@@ -32,6 +32,7 @@ type GopnsApplication struct {
 	BaseConfig           config.BaseConfig
 	AWSConfig            config.AWSConfig
 	DeviceManager        device.DeviceManager
+	WsContainer          restful.Container
 }
 
 func New() (GopnsApp, error) {
@@ -205,15 +206,19 @@ func (this *GopnsApplication) runWorkerPool() error {
 
 func (this *GopnsApplication) setupRestServices() {
 
+	//setup a new services container for gopns rest services
+	this.WsContainer = *restful.NewContainer()
+	//ToDo read the gopns rest root path from config (re: embeddable app)
+	rootPath := "/rest" //without the last slash
+
 	notificationService := new(rest.NotificationService)
 	notificationService.NotificationSender = &this.NotificationSender
 	notificationService.DeviceManager = this.DeviceManager
+	// register notification service with our services container
+	notificationService.Register(&this.WsContainer, rootPath)
 
-	deviceService := new(rest.DeviceService)
-	deviceService.DeviceManager = this.DeviceManager
+	//deviceService := new(rest.DeviceService)
+	//deviceService.DeviceManager = this.DeviceManager
 
-	gorest.RegisterService(deviceService)
-	gorest.RegisterService(notificationService)
-	http.Handle("/", gorest.Handle())
 	http.ListenAndServe(":"+this.BaseConfig.Port(), nil)
 }
