@@ -10,6 +10,7 @@ import (
 	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest"
+	//"github.com/gopns/gopns/rest/restutil"
 	"github.com/stefantalpalaru/pool"
 	"log"
 	"net/http"
@@ -174,6 +175,8 @@ func (this *GopnsApplication) setupSNS() error {
 
 func (this *GopnsApplication) setupMetrics() error {
 
+	//metrics.StartMetricPrinter()
+
 	metrics.StartGraphiteReporter(
 		this.BaseConfig.MetricsServer(),
 		this.BaseConfig.MetricsAPIKey(),
@@ -208,6 +211,7 @@ func (this *GopnsApplication) setupRestServices() {
 
 	//setup a new services container for gopns rest services
 	this.WsContainer = *restful.NewContainer()
+
 	//ToDo read the gopns rest root path from config (re: embeddable app)
 	rootPath := "/rest" //without the last slash (e.g., /rest/gopns)
 

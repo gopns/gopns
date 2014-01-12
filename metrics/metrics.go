@@ -8,15 +8,19 @@ import (
 	"time"
 )
 
-func setupMetrics() {
-
-}
+type Timer metrics.Timer
 
 func GetCallMeters(metricName string) (callMeter metrics.Meter, errorMeter metrics.Meter) {
 	callMeter = metrics.GetOrRegisterMeter(metricName, metrics.DefaultRegistry)
 	errorMeter = metrics.GetOrRegisterMeter(metricName+".error", metrics.DefaultRegistry)
 
 	return callMeter, errorMeter
+}
+
+func GetTimer(metricName string) metrics.Timer {
+
+	h := metrics.GetOrRegisterTimer(metricName, metrics.DefaultRegistry)
+	return h
 }
 
 func StartMetricPrinter() {

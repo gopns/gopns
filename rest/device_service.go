@@ -18,18 +18,24 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("/").To(serv.getDevices).
+	ws.Route(ws.GET("/").
+		Filter(NewTimingFilter("get-devices")).
+		To(serv.getDevices).
 		// docs
 		Doc("list devices").
 		Param(ws.QueryParameter("cursor", "the cursor for fetching the next set of devices").DataType("string")).
 		Writes(devicePkg.DeviceList{}))
 
-	ws.Route(ws.POST("/").To(serv.registerDevice).
+	ws.Route(ws.POST("/").
+		Filter(NewTimingFilter("post-device")).
+		To(serv.registerDevice).
 		// docs
 		Doc("register a new device").
 		Reads(devicePkg.DeviceRegistration{}))
 
-	ws.Route(ws.GET("/{deviceAlias}").To(serv.getDevice).
+	ws.Route(ws.GET("/{deviceAlias}").
+		Filter(NewTimingFilter("get-device")).
+		To(serv.getDevice).
 		// docs
 		Doc("get device by alias").
 		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).

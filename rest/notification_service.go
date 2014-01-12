@@ -19,21 +19,25 @@ func (serv *NotificationService) Register(container *restful.Container, rootPath
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON) // you can specify this per route as well
 
-	ws.Route(ws.POST("/{deviceAlias}").To(serv.sendPushNotification).
+	ws.Route(ws.POST("/{deviceAlias}").
+		Filter(NewTimingFilter("post-notification")).
+		To(serv.sendPushNotification).
 		// docs
 		Doc("send a push notification to the device by alias").
 		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
-		Reads(notification.NotificationMessage{})) // from the request
+		Reads(notification.NotificationMessage{}))
 
 	/*
-		ws.Route(ws.POST("/").To(serv.sendMassNotification).
+		ws.Route(ws.POST("/").
+			Filter(NewTimingFilter("post-notifications")).
+			To(serv.sendMassNotification).
 			// docs
 			Doc("send mass push notifications to all users").
 			Param(ws.QueryParameter("localesParam", "specify the locale").DataType("string")).
 			Param(ws.QueryParameter("platformParam", "specify the platform").DataType("string")).
 			Param(ws.QueryParameter("requiredTagsParam", "tags which must be set for a user, used for segmentation").DataType("string")).
 			Param(ws.QueryParameter("skipTagsParam", "tags to skip for segmentation ").DataType("string")).
-			Reads(notification.NotificationMessage{})) // from the request
+			Reads(notification.NotificationMessage{}))
 	*/
 	container.Add(ws)
 }
