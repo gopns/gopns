@@ -17,9 +17,17 @@ func (this PlatformAppStruct) Type() string {
 	return this.TypeValue
 }
 
+func (this PlatformAppStruct) ConfigMap() map[string]string {
+	configMap := make(map[string]string)
+	configMap["Type"] = this.TypeValue
+	configMap["Arn"] = this.ArnValue
+	return configMap
+}
+
 type PlatformApp interface {
 	Arn() string
 	Type() string
+	ConfigMap() map[string]string
 }
 
 func parsePlatformAppConfig(awsConfig *ConfigFile) map[string]PlatformApp {

@@ -3,7 +3,6 @@ package notification
 import (
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/device"
-	"github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/metrics"
 	"github.com/stefantalpalaru/pool"
 	"time"
@@ -12,7 +11,7 @@ import (
 type NotificationSender struct {
 	SnsClient    sns.SNSClient
 	WorkerPool   *pool.Pool
-	PlatformApps map[string]gopnsconfig.PlatformApp
+	PlatformApps map[string]map[string]string
 }
 
 func (this *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
@@ -57,7 +56,7 @@ func (this *NotificationSender) sendNotification(task NotificationTask) {
 			arn,
 			message.Title,
 			message.Message,
-			this.PlatformApps[device_.Platform].Type())
+			this.PlatformApps[device_.Platform]["Type"])
 	}
 
 	// send appropriate response code

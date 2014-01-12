@@ -64,7 +64,7 @@ func New() (GopnsApp, error) {
 	gopnasapp_.NotificationSender = notification.NotificationSender{
 		SnsClient:    gopnasapp_.SNSClient,
 		WorkerPool:   &gopnasapp_.WorkerPool,
-		PlatformApps: gopnasapp_.AWSConfig.PlatformApps()}
+		PlatformApps: gopnasapp_.AWSConfig.PlatformAppsMap()}
 
 	//create a notification consumer
 	gopnasapp_.NotificationConsumer = notification.NewSQSNotifictionConsumer(
@@ -77,7 +77,7 @@ func New() (GopnsApp, error) {
 		gopnasapp_.SNSClient,
 		gopnasapp_.DynamoClient,
 		gopnasapp_.AWSConfig.DynamoTable(),
-		gopnasapp_.AWSConfig.PlatformApps())
+		gopnasapp_.AWSConfig.PlatformAppsMap())
 
 	//
 

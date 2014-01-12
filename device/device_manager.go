@@ -3,7 +3,6 @@ package device
 import (
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
-	"github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/metrics"
 )
 
@@ -16,11 +15,12 @@ type DeviceManager interface {
 type DefaultDeviceManager struct {
 	SnsClient    sns.SNSClient
 	DynamoClient dynamodb.DynamoClient
-	PlatformApps map[string]gopnsconfig.PlatformApp
+	PlatformApps map[string]map[string]string
 	DeviceTable  string
 }
 
-func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string, platformApps map[string]gopnsconfig.PlatformApp) DeviceManager {
+func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string,
+	platformApps map[string]map[string]string) DeviceManager {
 	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,
@@ -42,7 +42,7 @@ func (this *DefaultDeviceManager) RegisterDevice(device DeviceRegistration) (err
 	arn, err := this.SnsClient.RegisterDevice(
 		device.Id,
 		formatTags(device.Locale, device.Alias, device.Tags),
-		this.PlatformApps[device.PlatformApp].Arn())
+		this.PlatformApps[device.PlatformApp]["Arn"])
 
 	if err != nil {
 		errorMeter.Mark(1)

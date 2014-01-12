@@ -26,6 +26,14 @@ func (this *AWSConfigStruct) PlatformApps() map[string]PlatformApp {
 	return this.PlatformAppsValue
 }
 
+func (this *AWSConfigStruct) PlatformAppsMap() map[string]map[string]string {
+	platformAppsMap := make(map[string]map[string]string)
+	for appName, app := range this.PlatformAppsValue {
+		platformAppsMap[appName] = app.ConfigMap()
+	}
+	return platformAppsMap
+}
+
 func (this *AWSConfigStruct) DynamoTable() string {
 	return this.DynamoTableValue
 }
@@ -58,6 +66,7 @@ type AWSConfig interface {
 	UserID() string
 	UserSecret() string
 	PlatformApps() map[string]PlatformApp
+	PlatformAppsMap() map[string]map[string]string
 	DynamoTable() string
 	Region() string
 	InitialReadCapacity() int
