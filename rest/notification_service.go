@@ -4,6 +4,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/notification"
+	"log"
 	"net/http"
 )
 
@@ -42,10 +43,11 @@ func (serv *NotificationService) sendPushNotification(request *restful.Request, 
 
 	alias := request.PathParameter("deviceAlias")
 	err, device_ := serv.DeviceManager.GetDevice(alias)
-	if err != nil {
+	if err != nil || device_ == nil {
 		//ToDo use json error messages and appropriate error handling
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusNotFound, "Device not found.")
+		return
 	}
 
 	message := new(notification.NotificationMessage)
@@ -54,12 +56,14 @@ func (serv *NotificationService) sendPushNotification(request *restful.Request, 
 		//ToDo use json error messages and appropriate error handling
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	if !message.IsValid() {
 		//ToDo use json error messages and appropriate error handling
 		response.AddHeader("Content-Type", "text/plain")
 		response.WriteErrorString(http.StatusBadRequest, "Invalid push notification message")
+		return
 	}
 
 	serv.NotificationSender.SendSyncNotification(*device_, *message, 5)
