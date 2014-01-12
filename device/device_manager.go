@@ -17,15 +17,15 @@ type DefaultDeviceManager struct {
 	SnsClient    sns.SNSClient
 	DynamoClient dynamodb.DynamoClient
 	PlatformApps map[string]gopnsconfig.PlatformApp
-	DynamoTable  string
+	DeviceTable  string
 }
 
-func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient) DeviceManager {
+func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string, platformApps map[string]gopnsconfig.PlatformApp) DeviceManager {
 	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,
-		gopnsconfig.AWSConfigInstance().PlatformApps(),
-		gopnsconfig.AWSConfigInstance().DynamoTable()}
+		platformApps,
+		deviceTable}
 	return deviceManagerInstance
 }
 
@@ -60,7 +60,7 @@ func (this *DefaultDeviceManager) RegisterDevice(device DeviceRegistration) (err
 	updateItemRequest := dynamodb.UpdateItemRequest{
 		Key:              key,
 		AttributeUpdates: attributeUpdates,
-		TableName:        this.DynamoTable}
+		TableName:        this.DeviceTable}
 	err = this.DynamoClient.UpdateItem(updateItemRequest)
 
 	if err != nil {
@@ -76,7 +76,7 @@ func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *Device)
 	callMeter.Mark(1)
 	key := make(map[string]dynamodb.Attribute)
 	key["alias"] = dynamodb.Attribute{S: deviceAlias}
-	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: this.DynamoTable}
+	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: this.DeviceTable}
 
 	item, err := this.DynamoClient.GetItem(getItemRequest)
 
@@ -97,7 +97,7 @@ func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *DeviceList)
 		startKey["alias"] = dynamodb.Attribute{S: cursor}
 	}
 
-	scanRequest := dynamodb.ScanRequest{ExclusiveStartKey: startKey, TableName: this.DynamoTable, Limit: 1000}
+	scanRequest := dynamodb.ScanRequest{ExclusiveStartKey: startKey, TableName: this.DeviceTable, Limit: 1000}
 
 	response, err := this.DynamoClient.ScanForItems(scanRequest)
 	if err == nil {

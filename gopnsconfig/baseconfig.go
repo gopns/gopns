@@ -4,12 +4,6 @@ import (
 	"log"
 )
 
-var baseConfigInstance BaseConfig
-
-func BaseConfigInstance() BaseConfig {
-	return baseConfigInstance
-}
-
 type BaseConfigStruct struct {
 	PortValue          string
 	MetricsServerValue string
@@ -17,19 +11,19 @@ type BaseConfigStruct struct {
 	MetricsPrefixValue string
 }
 
-func (this BaseConfigStruct) Port() string {
+func (this *BaseConfigStruct) Port() string {
 	return this.PortValue
 }
 
-func (this BaseConfigStruct) MetricsAPIKey() string {
+func (this *BaseConfigStruct) MetricsAPIKey() string {
 	return this.MetricsAPIKeyValue
 }
 
-func (this BaseConfigStruct) MetricsServer() string {
+func (this *BaseConfigStruct) MetricsServer() string {
 	return this.MetricsServerValue
 }
 
-func (this BaseConfigStruct) MetricsPrefix() string {
+func (this *BaseConfigStruct) MetricsPrefix() string {
 	return this.MetricsPrefixValue
 }
 
@@ -40,7 +34,7 @@ type BaseConfig interface {
 	MetricsPrefix() string
 }
 
-func parseBaseConfig(baseConfig *ConfigFile) {
+func parseBaseConfig(baseConfig *ConfigFile) BaseConfig {
 	port, err := baseConfig.GetString("default", "port")
 	checkError("Unable to find Server Port", err)
 
@@ -59,6 +53,7 @@ func parseBaseConfig(baseConfig *ConfigFile) {
 		metricsPrefix = ""
 	}
 
-	baseConfigInstance = BaseConfigStruct{port, metricsServer, metricsKey, metricsPrefix}
+	baseConfigInstance := &BaseConfigStruct{port, metricsServer, metricsKey, metricsPrefix}
+	return baseConfigInstance
 
 }

@@ -29,6 +29,8 @@ type GopnsApplication struct {
 	NotificationSender   notification.NotificationSender
 	NotificationConsumer notification.NotificationConsumer
 	AppMode              config.APPLICATION_MODE
+	BaseConfig           config.BaseConfig
+	AWSConfig            config.AWSConfig
 	DeviceManager        device.DeviceManager
 }
 
@@ -36,7 +38,7 @@ func New() (GopnsApp, error) {
 
 	gopnasapp_ := &GopnsApplication{}
 
-	gopnasapp_.AppMode = config.ParseConfig()
+	gopnasapp_.AppMode, gopnasapp_.BaseConfig, gopnasapp_.AWSConfig = config.ParseConfig()
 
 	err := gopnasapp_.setupDynamoDB()
 	if err != nil {
@@ -62,18 +64,20 @@ func New() (GopnsApp, error) {
 	gopnasapp_.NotificationSender = notification.NotificationSender{
 		SnsClient:    gopnasapp_.SNSClient,
 		WorkerPool:   &gopnasapp_.WorkerPool,
-		PlatformApps: config.AWSConfigInstance().PlatformApps()}
+		PlatformApps: gopnasapp_.AWSConfig.PlatformApps()}
 
 	//create a notification consumer
 	gopnasapp_.NotificationConsumer = notification.NewSQSNotifictionConsumer(
-		config.AWSConfigInstance().SqsQueueUrl(),
+		gopnasapp_.AWSConfig.SqsQueueUrl(),
 		gopnasapp_.SQSClient,
 		&gopnasapp_.NotificationSender)
 
 	//create a device manager
 	gopnasapp_.DeviceManager = device.New(
 		gopnasapp_.SNSClient,
-		gopnasapp_.DynamoClient)
+		gopnasapp_.DynamoClient,
+		gopnasapp_.AWSConfig.DynamoTable(),
+		gopnasapp_.AWSConfig.PlatformApps())
 
 	//
 
@@ -109,15 +113,15 @@ func (this *GopnsApplication) Start() error {
 func (this *GopnsApplication) setupDynamoDB() error {
 	var err error
 	this.DynamoClient, err = dynamodb.New(
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region())
+		this.AWSConfig.UserID(),
+		this.AWSConfig.UserSecret(),
+		this.AWSConfig.Region())
 
 	if err != nil {
 		return err
 	}
 
-	if found, err := this.DynamoClient.FindTable(config.AWSConfigInstance().DynamoTable()); err != nil {
+	if found, err := this.DynamoClient.FindTable(this.AWSConfig.DynamoTable()); err != nil {
 		return err
 	} else if found {
 		return nil
@@ -125,11 +129,11 @@ func (this *GopnsApplication) setupDynamoDB() error {
 
 		createTableRequest := dynamodb.CreateTableRequest{
 			[]dynamodb.AttributeDefinition{dynamodb.AttributeDefinition{"alias", "S"}},
-			config.AWSConfigInstance().DynamoTable(),
+			this.AWSConfig.DynamoTable(),
 			[]dynamodb.KeySchema{dynamodb.KeySchema{"alias", "HASH"}},
 			dynamodb.ProvisionedThroughput{
-				config.AWSConfigInstance().InitialReadCapacity(),
-				config.AWSConfigInstance().InitialWriteCapacity()}}
+				this.AWSConfig.InitialReadCapacity(),
+				this.AWSConfig.InitialWriteCapacity()}}
 		return this.DynamoClient.CreateTable(createTableRequest)
 	}
 
@@ -139,15 +143,15 @@ func (this *GopnsApplication) setupDynamoDB() error {
 func (this *GopnsApplication) setupSQS() error {
 	var err error
 	this.SQSClient = sqs.New(
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region())
+		this.AWSConfig.UserID(),
+		this.AWSConfig.UserSecret(),
+		this.AWSConfig.Region())
 
-	if sqsQueue, err := this.SQSClient.CreateQueue(config.AWSConfigInstance().SqsQueueName()); err != nil {
+	if sqsQueue, err := this.SQSClient.CreateQueue(this.AWSConfig.SqsQueueName()); err != nil {
 		log.Fatalf("Unable to initilize SQS %s", err.Error())
 	} else {
 		log.Printf("Using SQS Queue %s", sqsQueue.QueueUrl)
-		config.AWSConfigInstance().SetSqsQueueUrl(sqsQueue.QueueUrl)
+		this.AWSConfig.SetSqsQueueUrl(sqsQueue.QueueUrl)
 	}
 
 	return err
@@ -156,9 +160,9 @@ func (this *GopnsApplication) setupSQS() error {
 func (this *GopnsApplication) setupSNS() error {
 	var err error
 	this.SNSClient, err = sns.New(
-		config.AWSConfigInstance().UserID(),
-		config.AWSConfigInstance().UserSecret(),
-		config.AWSConfigInstance().Region())
+		this.AWSConfig.UserID(),
+		this.AWSConfig.UserSecret(),
+		this.AWSConfig.Region())
 
 	if err != nil {
 		return err
@@ -170,9 +174,9 @@ func (this *GopnsApplication) setupSNS() error {
 func (this *GopnsApplication) setupMetrics() error {
 
 	metrics.StartGraphiteReporter(
-		config.BaseConfigInstance().MetricsServer(),
-		config.BaseConfigInstance().MetricsAPIKey(),
-		config.BaseConfigInstance().MetricsPrefix())
+		this.BaseConfig.MetricsServer(),
+		this.BaseConfig.MetricsAPIKey(),
+		this.BaseConfig.MetricsPrefix())
 
 	return nil
 }
@@ -211,5 +215,5 @@ func (this *GopnsApplication) setupRestServices() {
 	gorest.RegisterService(deviceService)
 	gorest.RegisterService(notificationService)
 	http.Handle("/", gorest.Handle())
-	http.ListenAndServe(":"+config.BaseConfigInstance().Port(), nil)
+	http.ListenAndServe(":"+this.BaseConfig.Port(), nil)
 }

@@ -2,10 +2,6 @@ package gopnsconfig
 
 var awsConfigInstance AWSConfig
 
-func AWSConfigInstance() AWSConfig {
-	return awsConfigInstance
-}
-
 type AWSConfigStruct struct {
 	UserIDValue               string
 	UserSecretValue           string
@@ -18,39 +14,39 @@ type AWSConfigStruct struct {
 	SqsQueueUrlValue          string
 }
 
-func (this AWSConfigStruct) UserID() string {
+func (this *AWSConfigStruct) UserID() string {
 	return this.UserIDValue
 }
 
-func (this AWSConfigStruct) UserSecret() string {
+func (this *AWSConfigStruct) UserSecret() string {
 	return this.UserSecretValue
 }
 
-func (this AWSConfigStruct) PlatformApps() map[string]PlatformApp {
+func (this *AWSConfigStruct) PlatformApps() map[string]PlatformApp {
 	return this.PlatformAppsValue
 }
 
-func (this AWSConfigStruct) DynamoTable() string {
+func (this *AWSConfigStruct) DynamoTable() string {
 	return this.DynamoTableValue
 }
 
-func (this AWSConfigStruct) Region() string {
+func (this *AWSConfigStruct) Region() string {
 	return this.RegionValue
 }
 
-func (this AWSConfigStruct) InitialReadCapacity() int {
+func (this *AWSConfigStruct) InitialReadCapacity() int {
 	return this.InitialReadCapacityValue
 }
 
-func (this AWSConfigStruct) InitialWriteCapacity() int {
+func (this *AWSConfigStruct) InitialWriteCapacity() int {
 	return this.InitialWriteCapacityValue
 }
 
-func (this AWSConfigStruct) SqsQueueName() string {
+func (this *AWSConfigStruct) SqsQueueName() string {
 	return this.SqsQueueNameValue
 }
 
-func (this AWSConfigStruct) SqsQueueUrl() string {
+func (this *AWSConfigStruct) SqsQueueUrl() string {
 	return this.SqsQueueUrlValue
 }
 
@@ -71,7 +67,7 @@ type AWSConfig interface {
 	SetSqsQueueUrl(queueUrl string)
 }
 
-func parseAwsConfig(awsConfig *ConfigFile) {
+func parseAwsConfig(awsConfig *ConfigFile) AWSConfig {
 	userId, err := awsConfig.GetString("default", "id")
 	checkError("Unable to find AWS User ID", err)
 
@@ -93,7 +89,7 @@ func parseAwsConfig(awsConfig *ConfigFile) {
 	sqsQueueName, err := awsConfig.GetString("default", "sqs-queue-name")
 	checkError("Unable to find AWS sqs-queue-name", err)
 
-	awsConfigInstance = &AWSConfigStruct{
+	awsConfigInstance := &AWSConfigStruct{
 		userId,
 		userSecret,
 		parsePlatformAppConfig(awsConfig),
@@ -103,5 +99,6 @@ func parseAwsConfig(awsConfig *ConfigFile) {
 		int(writeCapacity),
 		sqsQueueName,
 		""}
+	return awsConfigInstance
 
 }

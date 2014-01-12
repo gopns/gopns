@@ -15,7 +15,7 @@ const (
 	SEND_MODE     APPLICATION_MODE = iota
 )
 
-func ParseConfig() APPLICATION_MODE {
+func ParseConfig() (APPLICATION_MODE, BaseConfig, AWSConfig) {
 	var aws_config_file string
 	var base_config_file string
 	var register bool
@@ -41,34 +41,36 @@ func ParseConfig() APPLICATION_MODE {
 	awsConfigReader, err := os.Open(aws_config_file)
 	checkError("Unable to read aws config file ", err)
 
-	readConfiguration(baseConfigReader, awsConfigReader)
+	baseCofig, awsConfig := readConfiguration(baseConfigReader, awsConfigReader)
 
 	if register {
 		log.Printf("Running in client mode, registering devices listed in %s, and printing arns in %s", input_file, output_file)
-		return REGISTER_MODE
+		return REGISTER_MODE, baseCofig, awsConfig
 	} else if send {
 		log.Printf("Running in client mode, sending pusn notes to ARNs listed in %s, and printing results in %s", input_file, output_file)
-		return SEND_MODE
+		return SEND_MODE, baseCofig, awsConfig
 	} else {
 		log.Printf("Running in server mode")
-		return SERVER_MODE
+		return SERVER_MODE, baseCofig, awsConfig
 	}
 
 }
 
-func readConfiguration(baseConfigReader io.ReadCloser, awsConfigReader io.ReadCloser) {
+func readConfiguration(baseConfigReader io.ReadCloser, awsConfigReader io.ReadCloser) (BaseConfig, AWSConfig) {
 
-	baseConfig, err := ReadConfig(baseConfigReader)
+	baseConfigRaw, err := ReadConfig(baseConfigReader)
 	checkError("Unable to parse base config", err)
 
-	awsConfig, err := ReadConfig(awsConfigReader)
+	awsConfigRaw, err := ReadConfig(awsConfigReader)
 	checkError("Unable to parse AWS config", err)
 
-	parseBaseConfig(baseConfig)
-	parseAwsConfig(awsConfig)
+	baseConfig := parseBaseConfig(baseConfigRaw)
+	awsConfig := parseAwsConfig(awsConfigRaw)
 
 	baseConfigReader.Close()
 	awsConfigReader.Close()
+
+	return baseConfig, awsConfig
 
 }
 
