@@ -209,7 +209,7 @@ func (this *GopnsApplication) setupRestServices() {
 	//setup a new services container for gopns rest services
 	this.WsContainer = *restful.NewContainer()
 	//ToDo read the gopns rest root path from config (re: embeddable app)
-	rootPath := "/rest" //without the last slash
+	rootPath := "/rest" //without the last slash (e.g., /rest/gopns)
 
 	notificationService := new(rest.NotificationService)
 	notificationService.NotificationSender = &this.NotificationSender
@@ -219,6 +219,7 @@ func (this *GopnsApplication) setupRestServices() {
 
 	//deviceService := new(rest.DeviceService)
 	//deviceService.DeviceManager = this.DeviceManager
-
-	http.ListenAndServe(":"+this.BaseConfig.Port(), nil)
+	log.Printf("start listening on localhost:8080")
+	server := &http.Server{Addr: ":" + this.BaseConfig.Port(), Handler: &this.WsContainer}
+	log.Fatal(server.ListenAndServe())
 }
