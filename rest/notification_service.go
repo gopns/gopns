@@ -4,7 +4,6 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/notification"
-	"log"
 	"net/http"
 )
 
