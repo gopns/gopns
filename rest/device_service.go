@@ -3,8 +3,8 @@ package rest
 import (
 	"github.com/emicklei/go-restful"
 	devicePkg "github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/exception"
 	"log"
-	"net/http"
 )
 
 type DeviceService struct {
@@ -41,17 +41,23 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
 		Writes(devicePkg.Device{}))
 
+	ws.Route(ws.POST("/{deviceAlias}/tag/{tag}").
+		Filter(NewTimingFilter("add-tag")).
+		To(serv.addTags).
+		// docs
+		Doc("Add tag to device").
+		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
+		Param(ws.PathParameter("tag", "The tag to add").DataType("string")))
+
 	container.Add(ws)
 }
 
 func (serv *DeviceService) getDevice(request *restful.Request, response *restful.Response) {
 	alias := request.PathParameter("deviceAlias")
 	err, device_ := serv.DeviceManager.GetDevice(alias)
-	if err != nil || device_ == nil {
-		//ToDo use json error messages and appropriate error handling
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusNotFound, "Device not found.")
-		return
+	exception.ConditionalThrowNotFoundException(err)
+	if device_ == nil {
+		panic(exception.NotFoundException("Device Not Found"))
 	}
 	response.WriteEntity(*device_)
 
@@ -62,12 +68,8 @@ func (serv *DeviceService) getDevices(request *restful.Request, response *restfu
 	cursor := request.QueryParameter("cursor")
 
 	err, deviceList := serv.DeviceManager.GetDevices(cursor)
-	if err != nil || deviceList == nil {
-		//ToDo use json error messages and appropriate error handling
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusNotFound, "No device registered.")
-		return
-	}
+	exception.ConditionalThrowInternalServerErrorException(err)
+
 	log.Printf("Devices found: %v\n", *deviceList)
 	response.WriteEntity(*deviceList)
 }
@@ -76,41 +78,32 @@ func (serv *DeviceService) registerDevice(request *restful.Request, response *re
 
 	deviceR := new(devicePkg.DeviceRegistration)
 	err := request.ReadEntity(deviceR)
-	if err != nil {
-		//ToDo use json error messages and appropriate error handling
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, "Invalid device")
-		return
-	}
+
+	exception.ConditionalThrowBadRequestException(err)
 
 	// ToDo validate device
 
 	err, _ = serv.DeviceManager.RegisterDevice(*deviceR)
-	if err != nil {
-		//ToDo use json error messages and appropriate error handling
-		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusInternalServerError, err.Error())
-		return
-	}
+	exception.ConditionalThrowInternalServerErrorException(err)
 
 }
 
 func (serv *DeviceService) addTags(request *restful.Request, response *restful.Response) {
-
+	panic(exception.NotImplemented("Not Implemented"))
 	return
 }
 
 func (serv *DeviceService) deleteDevice(request *restful.Request, response *restful.Response) {
-
+	panic(exception.NotImplemented("Not Implemented"))
 	return
 }
 
 func (serv *DeviceService) deleteTag(request *restful.Request, response *restful.Response) {
-
+	panic(exception.NotImplemented("Not Implemented"))
 	return
 }
 
 func (serv *DeviceService) deleteArn(request *restful.Request, response *restful.Response) {
-
+	panic(exception.NotImplemented("Not Implemented"))
 	return
 }

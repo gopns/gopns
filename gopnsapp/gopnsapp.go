@@ -211,6 +211,7 @@ func (this *GopnsApplication) setupRestServices() {
 
 	//setup a new services container for gopns rest services
 	this.WsContainer = *restful.NewContainer()
+	this.WsContainer.Filter(rest.ExceptionFilter)
 
 	//ToDo read the gopns rest root path from config (re: embeddable app)
 	rootPath := "/rest" //without the last slash (e.g., /rest/gopns)
