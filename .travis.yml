@@ -1,26 +1,23 @@
 language: go
+env:
+  global: 
+    #COVERALLS-KEY for coverage reporting
+    - secure: "E8XzAIjXajE2g7qg3amDOqmNZK94F9KhYTFRm3ColYaOjpgNijdjTsK0JFCBg7CO7SST8MKek1C6IW7wpGE+xGdhjBJBECENn4PcqRjYOW0tvwYx+N710L22OULPmHpSo8TZyRKkQYHvg3o3R4GrvUnYtqUKCRs9vGdlHs3mydQ="
 
-go:
-    1.2
-
+go: 1.2
 install:
-    - go get github.com/gopns/gopns
-    - go get code.google.com/p/gorest
-    - go install code.google.com/p/gorest
-    - go get github.com/emicklei/go-restful
-    - go install github.com/emicklei/go-restful
-    - go install github.com/gopns/gopns
-
-script: go test ./...
-
+- go get github.com/gopns/gopns
+- go get code.google.com/p/gorest
+- go install code.google.com/p/gorest
+- go get github.com/emicklei/go-restful
+- go install github.com/emicklei/go-restful
+- go install github.com/gopns/gopns
+script: ./test-coverage.sh
 notifications:
-  email:
+  email: 
   recipients:
-      - usman@techtraits.com
-      - bilalsheikh298@gmail.com
+  - usman@techtraits.com
+  - bilalsheikh298@gmail.com
   on_success: change
   on_failure: always
-
-
-
 
