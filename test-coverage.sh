@@ -1,3 +1,4 @@
+go list all | grep "cover"
 
 echo "mode: set" > acc.out
 for Dir in $(find ./* -maxdepth 10 -type d ); 
