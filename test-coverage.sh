@@ -12,6 +12,6 @@ do
     	fi
     fi
 done
-goveralls -coverprofile=acc.out $COVERALLS-KEY
+goveralls -coverprofile=acc.out $COVERALLS
 rm -rf ./profile.out
 rm -rf ./acc.out
