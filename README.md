@@ -1,5 +1,6 @@
 Go Push Notification Service (GoPNS)
 ===
+![Gohper](http://i.imgur.com/XVfdzlQ.png)
 [![Build Status](https://travis-ci.org/gopns/gopns.png?branch=master)](https://travis-ci.org/gopns/gopns)   [![GoDoc](https://godoc.org/github.com/gopns/gopns?status.png)](http://godoc.org/github.com/gopns/gopns) [![Coverage Status](https://coveralls.io/repos/gopns/gopns/badge.png?branch=master)](https://coveralls.io/r/gopns/gopns?branch=master)
 
 GoPNS provides scalable and efficient a mass push notificaiton service built on top of Amazon's Simple Notification Service. The project provides REST end points for registering Device IDs with arbitrary metadata. These can then be used to send a push notification to all or a segment of the user base based on the metadata. This project is written in the Go Programming language and is designed to be resource efficient. In addition it uses Amazon Simple Queue Service in order to distribute work load out to multiple instances if you have them available. 
