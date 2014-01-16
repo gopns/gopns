@@ -13,7 +13,11 @@ func ExceptionFilter(req *restful.Request, resp *restful.Response, chain *restfu
 
 }
 
-func recoverPanic(resp *restful.Response) {
+type ResponseWriter interface {
+	WriteErrorString(int, string) error
+}
+
+func recoverPanic(resp ResponseWriter) {
 	recovered := recover()
 
 	if recovered == nil {

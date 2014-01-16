@@ -79,7 +79,6 @@ func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *Device)
 	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: this.DeviceTable}
 
 	item, err := this.DynamoClient.GetItem(getItemRequest)
-
 	if err == nil {
 		return nil, &Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 	} else {

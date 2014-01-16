@@ -57,6 +57,7 @@ func (serv *DeviceService) getDevice(request *restful.Request, response *restful
 	err, device_ := serv.DeviceManager.GetDevice(alias)
 	exception.ConditionalThrowNotFoundException(err)
 	if device_ == nil {
+		log.Printf("Device not found for id %s", alias)
 		panic(exception.NotFoundException("Device Not Found"))
 	}
 	response.WriteEntity(*device_)

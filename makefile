@@ -8,6 +8,9 @@ build:
 	go build
 
 test:
+	go test ./... 
+
+coverage:
 	./test-coverage.sh
 
 	

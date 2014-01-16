@@ -55,7 +55,7 @@ func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return false, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+		return false, errors.New("Unable to find table. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 
 		content, _ := ioutil.ReadAll(response.Body)
@@ -97,7 +97,7 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+		return errors.New("Unable to create table. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		log.Printf("Created Dynamo Table %s", createTableRequest.TableName)
 	}
@@ -130,7 +130,7 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+		return errors.New("Unable to update device. " + errorResponse.Type + ": " + errorResponse.Message)
 	}
 
 	return nil
@@ -161,12 +161,16 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return nil, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+		return nil, errors.New("Unable to get item. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		items := make(map[string]map[string]Attribute)
 		json.Unmarshal(content, &items)
-		return items["Item"], nil
+		if len(items) > 0 {
+			return items["Item"], nil
+		} else {
+			return nil, errors.New("Unable to get item. Not Found")
+		}
 	}
 
 }
@@ -196,7 +200,7 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return nil, errors.New("Unable to register device. " + errorResponse.Type + ": " + errorResponse.Message)
+		return nil, errors.New("Unable to scan for items. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
 		content, _ := ioutil.ReadAll(response.Body)
 		scanResponse := new(ScanResponse)
