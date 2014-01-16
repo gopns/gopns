@@ -11,5 +11,4 @@ func TestKeySanitization(t *testing.T) {
 	if strings.ContainsAny(sanitizedKey, " ,()\\/?<>;:~@#$%^&*+=") {
 		t.Error("Invalid sanitization. Returned string :", sanitizedKey)
 	}
-
 }
