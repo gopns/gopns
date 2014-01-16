@@ -21,10 +21,13 @@ type RespTestWriter struct {
 	t               *testing.T
 	expectedStatus  int
 	expectedMessage string
+	failOnCall      bool
 }
 
 func (this *RespTestWriter) WriteErrorString(status int, message string) error {
-	if status != this.expectedStatus {
+	if this.failOnCall {
+		this.t.Errorf("Unexpected call too error response writter")
+	} else if status != this.expectedStatus {
 		this.t.Errorf("Inavlid stats %d, %d expected", status, this.expectedStatus)
 	} else if message != this.expectedMessage {
 		this.t.Errorf("Inavlid message %s, %s expected", message, this.expectedMessage)
@@ -45,7 +48,7 @@ func TestRecoverPanicString(t *testing.T) {
 }
 
 func sendPanicString(t *testing.T) {
-	defer recoverPanic(&RespTestWriter{t, 500, "Panic String"})
+	defer recoverPanic(&RespTestWriter{t, 500, "Panic String", false})
 	panic("Panic String")
 }
 
@@ -55,7 +58,7 @@ func TestRecoverPanicException(t *testing.T) {
 }
 
 func sendPanicException(t *testing.T) {
-	defer recoverPanic(&RespTestWriter{t, 500, "Exception Message"})
+	defer recoverPanic(&RespTestWriter{t, 500, "Exception Message", false})
 	panic(exception.NewException("Exception Message"))
 }
 
@@ -65,7 +68,7 @@ func TestRecoverPanicWebException(t *testing.T) {
 }
 
 func sendPanicWebException(t *testing.T) {
-	defer recoverPanic(&RespTestWriter{t, 400, "Bad Requesst Message"})
+	defer recoverPanic(&RespTestWriter{t, 400, "Bad Requesst Message", false})
 	panic(exception.BadRequestException("Bad Requesst Message"))
 }
 
@@ -75,6 +78,16 @@ func TestRecoverConditionalPanicTrue(t *testing.T) {
 }
 
 func sendPanicConditionalTrue(t *testing.T) {
-	defer recoverPanic(&RespTestWriter{t, 401, "Unauthorized"})
+	defer recoverPanic(&RespTestWriter{t, 401, "Unauthorized", false})
 	exception.ConditionalThrowUnauthorizedException(errors.New("Unauthorized"))
+}
+
+func TestRecoverConditionalPanicFalse(t *testing.T) {
+	defer recoverPanicFail(t)
+	sendPanicConditionalFalse(t)
+}
+
+func sendPanicConditionalFalse(t *testing.T) {
+	defer recoverPanic(&RespTestWriter{t, 0, "", true})
+	exception.ConditionalThrowUnauthorizedException(nil)
 }
