@@ -76,6 +76,6 @@ func readConfiguration(baseConfigReader io.ReadCloser, awsConfigReader io.ReadCl
 
 func checkError(message string, err error) {
 	if err != nil {
-		log.Fatalf("%s: %v", message, err)
+		log.Panicf("%s: %v", message, err)
 	}
 }
