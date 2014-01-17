@@ -5,12 +5,13 @@ import (
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/model"
+	"github.com/gopns/gopns/modelview"
 )
 
 type DeviceManager interface {
-	RegisterDevice(device model.DeviceRegistration) (error, int)
+	RegisterDevice(device modelview.DeviceRegistration) (error, int)
 	GetDevice(deviceAlias string) (error, *model.Device)
-	GetDevices(cursor string) (error, *model.DeviceList)
+	GetDevices(cursor string) (error, *modelview.DeviceList)
 }
 
 type DefaultDeviceManager struct {
@@ -30,11 +31,11 @@ func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTabl
 	return deviceManagerInstance
 }
 
-func (this *DefaultDeviceManager) RegisterDevice(device model.DeviceRegistration) (error, int) {
+func (this *DefaultDeviceManager) RegisterDevice(device modelview.DeviceRegistration) (error, int) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.register_device")
 	callMeter.Mark(1)
 
-	err := device.ValidateLocale()
+	err := model.ValidateLocale(device.Local())
 	if err != nil {
 		errorMeter.Mark(1)
 		return err, 400
