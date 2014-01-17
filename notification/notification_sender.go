@@ -2,8 +2,8 @@ package notification
 
 import (
 	"github.com/gopns/gopns/aws/sns"
-	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/metrics"
+	"github.com/gopns/gopns/model"
 	"github.com/stefantalpalaru/pool"
 	"time"
 )
@@ -14,7 +14,7 @@ type NotificationSender struct {
 	PlatformApps map[string]map[string]string
 }
 
-func (this *NotificationSender) SendSyncNotification(device device.Device, message NotificationMessage, timeout int) int {
+func (this *NotificationSender) SendSyncNotification(device model.Device, message NotificationMessage, timeout int) int {
 	callMeter, errorMeter := metrics.GetCallMeters("notification_sender.send_sync_notification")
 	callMeter.Mark(1)
 
@@ -32,7 +32,7 @@ func (this *NotificationSender) SendSyncNotification(device device.Device, messa
 
 }
 
-func (this *NotificationSender) SendAsyncNotification(device device.Device, message NotificationMessage) {
+func (this *NotificationSender) SendAsyncNotification(device model.Device, message NotificationMessage) {
 	callMeter, _ := metrics.GetCallMeters("notification_sender.send_async_notification")
 	callMeter.Mark(1)
 	task := NotificationTask{device: device, message: message, respondTo: nil}

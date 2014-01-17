@@ -1,4 +1,4 @@
-package device
+package model
 
 import (
 	"errors"
@@ -45,15 +45,6 @@ func ValidateLocale(locale string) error {
 	//TODO More validation to actually check codes
 	if !validLocale.MatchString(locale) {
 		return errors.New("Invalid locale")
-	}
-
-	return nil
-}
-
-func ValidatePlatform(platform string) error {
-	//TODO More validation to actually check codes
-	if !validPlatform.MatchString(platform) {
-		return errors.New("Invalid platform")
 	}
 
 	return nil

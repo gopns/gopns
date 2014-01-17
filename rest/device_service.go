@@ -4,6 +4,7 @@ import (
 	"github.com/emicklei/go-restful"
 	devicePkg "github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/exception"
+	"github.com/gopns/gopns/model"
 	"log"
 )
 
@@ -24,14 +25,14 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		// docs
 		Doc("list devices").
 		Param(ws.QueryParameter("cursor", "the cursor for fetching the next set of devices").DataType("string")).
-		Writes(devicePkg.DeviceList{}))
+		Writes(model.DeviceList{}))
 
 	ws.Route(ws.POST("/").
 		Filter(NewTimingFilter("post-device")).
 		To(serv.registerDevice).
 		// docs
 		Doc("register a new device").
-		Reads(devicePkg.DeviceRegistration{}))
+		Reads(model.DeviceRegistration{}))
 
 	ws.Route(ws.GET("/{deviceAlias}").
 		Filter(NewTimingFilter("get-device")).
@@ -39,7 +40,7 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		// docs
 		Doc("get device by alias").
 		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
-		Writes(devicePkg.Device{}))
+		Writes(model.Device{}))
 
 	ws.Route(ws.POST("/{deviceAlias}/tag/{tag}").
 		Filter(NewTimingFilter("add-tag")).
@@ -77,7 +78,7 @@ func (serv *DeviceService) getDevices(request *restful.Request, response *restfu
 
 func (serv *DeviceService) registerDevice(request *restful.Request, response *restful.Response) {
 
-	deviceR := new(devicePkg.DeviceRegistration)
+	deviceR := new(model.DeviceRegistration)
 	err := request.ReadEntity(deviceR)
 
 	exception.ConditionalThrowBadRequestException(err)

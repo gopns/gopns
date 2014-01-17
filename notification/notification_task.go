@@ -1,11 +1,11 @@
 package notification
 
 import (
-	"github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/model"
 )
 
 type NotificationTask struct {
 	message   NotificationMessage
-	device    device.Device
+	device    model.Device
 	respondTo *chan int
 }

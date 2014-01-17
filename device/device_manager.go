@@ -4,12 +4,13 @@ import (
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/metrics"
+	"github.com/gopns/gopns/model"
 )
 
 type DeviceManager interface {
-	RegisterDevice(device DeviceRegistration) (error, int)
-	GetDevice(deviceAlias string) (error, *Device)
-	GetDevices(cursor string) (error, *DeviceList)
+	RegisterDevice(device model.DeviceRegistration) (error, int)
+	GetDevice(deviceAlias string) (error, *model.Device)
+	GetDevices(cursor string) (error, *model.DeviceList)
 }
 
 type DefaultDeviceManager struct {
@@ -29,7 +30,7 @@ func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTabl
 	return deviceManagerInstance
 }
 
-func (this *DefaultDeviceManager) RegisterDevice(device DeviceRegistration) (error, int) {
+func (this *DefaultDeviceManager) RegisterDevice(device model.DeviceRegistration) (error, int) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.register_device")
 	callMeter.Mark(1)
 
@@ -71,7 +72,7 @@ func (this *DefaultDeviceManager) RegisterDevice(device DeviceRegistration) (err
 	return nil, 0
 }
 
-func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *Device) {
+func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *model.Device) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.get_device")
 	callMeter.Mark(1)
 	key := make(map[string]dynamodb.Attribute)
@@ -80,14 +81,14 @@ func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *Device)
 
 	item, err := this.DynamoClient.GetItem(getItemRequest)
 	if err == nil {
-		return nil, &Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
+		return nil, &model.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 	} else {
 		errorMeter.Mark(1)
 		return err, nil
 	}
 }
 
-func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *DeviceList) {
+func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *model.DeviceList) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.get_devices")
 	callMeter.Mark(1)
 	var startKey map[string]dynamodb.Attribute
@@ -104,7 +105,7 @@ func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *DeviceList)
 		if len(response.LastEvaluatedKey) != 0 {
 			cursor = response.LastEvaluatedKey["alias"].S
 		}
-		return nil, &DeviceList{convertToDevices(response.Items), cursor}
+		return nil, &model.DeviceList{convertToDevices(response.Items), cursor}
 	} else {
 		errorMeter.Mark(1)
 		return err, nil
@@ -112,11 +113,11 @@ func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *DeviceList)
 
 }
 
-func convertToDevices(items []map[string]dynamodb.Attribute) []Device {
+func convertToDevices(items []map[string]dynamodb.Attribute) []model.Device {
 
-	devices := make([]Device, 0, 0)
+	devices := make([]model.Device, 0, 0)
 	for _, item := range items {
-		device := Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
+		device := model.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
 		devices = append(devices, device)
 	}
 

@@ -22,7 +22,7 @@ func NewApp(id string) (app *App) {
 	return &App{id}
 }
 
-func (app App) Id() string{
+func (app App) Id() string {
 	return app.id
 }
 
@@ -30,10 +30,12 @@ func (app *App) SetId(id string) {
 	app.id = id
 }
 
-func NewPlatformApp(appId string, platform Platform, arn string) (papp *PlatformApp, error) {
-	papp = &PlatformApp{appId: appId, arn: arn}
-	papp.SetPlatform(platform)
-	return papp
+func NewPlatformApp(appId string, platform Platform, arn string) (*PlatformApp, error) {
+	papp := &PlatformApp{appId: appId, arn: arn}
+	if err := papp.SetPlatform(platform); err != nil {
+		return nil, err
+	}
+	return papp, nil
 }
 
 type PlatformApp struct {
@@ -58,28 +60,24 @@ func (papp *PlatformApp) SetAppId(appId string) {
 	papp.appId = appId
 }
 
-func (papp *PlatformApp) SetPlatform(platform Platform) error {
-	if err := ValidatePlatform(platform); err != nil {
+func (papp *PlatformApp) SetPlatform(p Platform) error {
+	if err := ValidatePlatform(p); err != nil {
 		return err
-	}else{
-		app.platform = platform
 	}
+
+	papp.platform = p
+	return nil
 }
 
-func (papp *PlatformApp) SetArn(arn String) {
+func (papp *PlatformApp) SetArn(arn string) {
 	papp.arn = arn
 }
 
-func (app *App) SetId(id string) {
-	app.id = id
-}
-
-var platformRegex = regexp.MustCompile("^(" + GCM + "|" + ADM + "|" APNS + "|" + APNS_SANDBOX ")$")
-
+var platformRegex = regexp.MustCompile("^(" + string(GCM) + "|" + string(ADM) + "|" + string(APNS) + "|" + string(APNS_SANDBOX) + ")$")
 
 func ValidatePlatform(p Platform) error {
-	if !platformRegex.MatchString(p) {
-		return errors.New("Invalid platform, valid values: " + GCM + "," + APNS + "," + APNS_SANDBOX + "or " + ADM)
+	if !platformRegex.MatchString(string(p)) {
+		return errors.New("Invalid platform, valid values: " + string(GCM) + "," + string(APNS) + "," + string(APNS_SANDBOX) + " or " + string(ADM))
 	}
 	return nil
 }
