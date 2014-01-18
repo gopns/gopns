@@ -2,20 +2,20 @@ package rest
 
 import (
 	"github.com/emicklei/go-restful"
-	devicePkg "github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/exception"
 	"github.com/gopns/gopns/model"
 	"log"
 )
 
 type DeviceService struct {
-	DeviceManager devicePkg.DeviceManager
+	DeviceManager device.DeviceManager
 }
 
 func (serv *DeviceService) Register(container *restful.Container, rootPath string) {
 	ws := new(restful.WebService)
 	ws.
-		Path(rootPath + "/device").
+		Path(rootPath + "/apps/{appId}/devices").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
@@ -23,45 +23,54 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		Filter(NewTimingFilter("get-devices")).
 		To(serv.getDevices).
 		// docs
-		Doc("list devices").
+		Doc("list all devices for an app").
+		Param(ws.PathParameter("appId", "the application id").DataType("string")).
 		Param(ws.QueryParameter("cursor", "the cursor for fetching the next set of devices").DataType("string")).
-		Writes(model.DeviceList{}))
+		Writes(modelview.PaginatedListView{}))
 
 	ws.Route(ws.POST("/").
-		Filter(NewTimingFilter("post-device")).
+		Filter(NewTimingFilter("register-device")).
 		To(serv.registerDevice).
 		// docs
 		Doc("register a new device").
-		Reads(model.DeviceRegistration{}))
+		Param(ws.PathParameter("appId", "the application id").DataType("string")).
+		Reads(modelview.RegisterDeviceView{}))
 
-	ws.Route(ws.GET("/{deviceAlias}").
+	ws.Route(ws.GET("/{deviceId}").
 		Filter(NewTimingFilter("get-device")).
 		To(serv.getDevice).
 		// docs
-		Doc("get device by alias").
-		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
+		Doc("get device by id").
+		Param(ws.PathParameter("appId", "the application id").DataType("string")).
+		Param(ws.PathParameter("deviceId", "the device id").DataType("string")).
 		Writes(model.Device{}))
 
-	ws.Route(ws.POST("/{deviceAlias}/tag/{tag}").
-		Filter(NewTimingFilter("add-tag")).
+	ws.Route(ws.PUT("/{deviceId}").
+		Filter(NewTimingFilter("put-device")).
 		To(serv.addTags).
 		// docs
 		Doc("Add tag to device").
-		Param(ws.PathParameter("deviceAlias", "the registered device alias").DataType("string")).
-		Param(ws.PathParameter("tag", "The tag to add").DataType("string")))
+		Param(ws.PathParameter("appId", "the application id").DataType("string")).
+		Param(ws.PathParameter("deviceId", "the registered device alias").DataType("string")))
 
 	container.Add(ws)
 }
 
 func (serv *DeviceService) getDevice(request *restful.Request, response *restful.Response) {
-	alias := request.PathParameter("deviceAlias")
-	err, device_ := serv.DeviceManager.GetDevice(alias)
-	exception.ConditionalThrowNotFoundException(err)
-	if device_ == nil {
+	id := request.PathParameter("deviceId")
+	if id == nil || id == "" {
+		panic(exception.BadRequestException("No device Id specified."))
+	}
+	device, err := serv.DeviceManager.GetDevice(id)
+	exception.ConditionalThrowInternalServerErrorException(err)
+	if device == nil {
 		log.Printf("Device not found for id %s", alias)
 		panic(exception.NotFoundException("Device Not Found"))
 	}
-	response.WriteEntity(*device_)
+
+	//convert device to device view
+	deviceView := modelview.ConvertToDeviceView(device)
+	response.WriteEntity(*deviceView)
 
 }
 
