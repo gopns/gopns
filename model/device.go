@@ -15,7 +15,7 @@ const (
 
 //TODO: constants for locale and timezone
 type Device struct {
-	userId     string
+	userAlias  string
 	appId      string
 	deviceType DeviceType
 	arn        string
@@ -25,8 +25,8 @@ type Device struct {
 	enabled    bool
 }
 
-func NewDevice(userId string, appId string, dt DeviceType, arn string, token string, locale string, timezone string, enabled bool) (*Device, error) {
-	device := &Device{userId: userId, appId: appId, arn: arn, token: token, enabled: enabled}
+func NewDevice(userAlias string, appId string, dt DeviceType, arn string, token string, locale string, timezone string, enabled bool) (*Device, error) {
+	device := &Device{userAlias: userAlias, appId: appId, arn: arn, token: token, enabled: enabled}
 	if err := device.SetDeviceType(dt); err != nil {
 		return nil, err
 	}
@@ -38,8 +38,8 @@ func NewDevice(userId string, appId string, dt DeviceType, arn string, token str
 	return device, nil
 }
 
-func (device Device) UserId() string {
-	return device.userId
+func (device Device) UserAlias() string {
+	return device.userAlias
 }
 
 func (device Device) AppId() string {
@@ -70,8 +70,8 @@ func (device Device) Timezone() string {
 	return device.timezone
 }
 
-func (device *Device) SetUserId(id string) {
-	device.userId = id
+func (device *Device) SetUserAlias(id string) {
+	device.userAlias = id
 }
 
 func (device *Device) SetAppId(id string) {
