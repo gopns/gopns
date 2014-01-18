@@ -25,6 +25,19 @@ type Device struct {
 	enabled    bool
 }
 
+func NewDevice(userId string, appId string, dt DeviceType, arn string, token string, locale string, timezone string, enabled bool) (*Device, error) {
+	device := &Device{userId: userId, appId: appId, arn: arn, token: token, enabled: enabled}
+	if err := device.SetDeviceType(dt); err != nil {
+		return nil, err
+	}
+	if err = device.SetLocale(locale); err != nil {
+		return nil, err
+	}
+	//TODO validate
+	device.SetTimezone(timezone)
+	return device, nil
+}
+
 func (device Device) UserId() string {
 	return device.userId
 }
@@ -63,6 +76,38 @@ func (device *Device) SetUserId(id string) {
 
 func (device *Device) SetAppId(id string) {
 	device.appId = id
+}
+
+func (device *Device) SetLocale(locale string) error {
+	if err := ValidateLocale(locale); err != nil {
+		return err
+	}
+	device.locale = locale
+	return nil
+}
+
+func (device *Device) SetTimezone(timezone string) {
+	device.timezone = timezone
+}
+
+func (device *Device) SetDeviceType(dt DeviceType) error {
+	if err := ValidateDeviceType(dt); err != nil {
+		return err
+	}
+	device.deviceType = dt
+	return nil
+}
+
+func (device *Device) SetArn(arn string) {
+	device.arn = arn
+}
+
+func (device *Device) SetToken(token string) {
+	device.token = token
+}
+
+func (device *Device) SetEnabled(enabled bool) {
+	device.enabled = enabled
 }
 
 var localRegex = regexp.MustCompile(`^[A-Za-z]{2,3}_[A-Za-z]{2,3}$`)
