@@ -58,6 +58,21 @@ func (dv *RegisterDeviceView) SetToken(token string) {
 	dv.token = token
 }
 
+func (dv *RegisterDeviceView) ToDevice() (*model.Device, error) {
+	device := new(model.Device)
+	device.SetUserAlias(dv.userAlias)
+	device.setToken(dv.token)
+	device.setTimezone(dv.timezone)
+	if err := device.SetDeviceType(dv.deviceType); err != nil {
+		return nil, err
+	}
+	if err := device.SetLocale(dv.locale); err != nil {
+		return nil, err
+	}
+
+	return device, nil
+}
+
 type DeviceList struct {
 	Devices []model.Device
 	Cursor  string `json:",omitempty"`
