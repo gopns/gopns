@@ -79,8 +79,3 @@ func (dv *DeviceRegisterView) ToDevice() (*model.Device, error) {
 
 	return device, nil
 }
-
-type DeviceList struct {
-	Devices []model.Device
-	Cursor  string `json:",omitempty"`
-}
