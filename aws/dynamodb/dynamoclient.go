@@ -3,8 +3,10 @@ package dynamodb
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gopns/gopns/aws"
 	"github.com/gopns/gopns/metrics"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,18 +22,31 @@ type DynamoClient interface {
 	ScanForItems(scanRequest ScanRequest) (*ScanResponse, error)
 }
 
+type requestor func(string, string, string) (int, io.ReadCloser, error)
+
 type BasicDynamoClient struct {
 	UserId     string
 	UserSecret string
 	Region     string
+	r          requestor
 }
 
 func New(
 	userId string,
 	userSecret string,
 	region string) (DynamoClient, error) {
+	c := &BasicDynamoClient{UserId: userId, UserSecret: userSecret, Region: region}
+	c.r = c.makeRequest
+	return c, nil
 
-	return &BasicDynamoClient{UserId: userId, UserSecret: userSecret, Region: region}, nil
+}
+
+func _new(
+	userId string,
+	userSecret string,
+	region string,
+	r requestor) (DynamoClient, error) {
+	return &BasicDynamoClient{UserId: userId, UserSecret: userSecret, Region: region, r: r}, nil
 
 }
 
@@ -40,7 +55,7 @@ func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.findtable")
 	callMeter.Mark(1)
 
-	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+	status, response, err := this.r("http://dynamodb."+this.Region+".amazonaws.com/",
 		"{}", "ListTables")
 
 	if err != nil {
@@ -48,23 +63,31 @@ func (this *BasicDynamoClient) FindTable(dynamoTable string) (bool, error) {
 		return false, err
 	}
 
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		content, _ := ioutil.ReadAll(response.Body)
+	if status != 200 {
+		content, _ := ioutil.ReadAll(response)
 		var errorResponse aws.ErrorStruct
-		json.Unmarshal(content, &errorResponse)
+		err := json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
-		return false, errors.New("Unable to find table. " + errorResponse.Type + ": " + errorResponse.Message)
+		if err != nil {
+			return false, errors.New(fmt.Sprintf("Unable to serialize aws response. %s", content))
+		} else {
+			return false, errors.New("Unable to find table. " + errorResponse.Type + ": " + errorResponse.Message)
+		}
 	} else {
 
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := ioutil.ReadAll(response)
 		var tableNames = make(map[string][]string)
-		json.Unmarshal(content, &tableNames)
-		for _, tableName := range tableNames["TableNames"] {
-			if tableName == dynamoTable {
-				log.Printf("Found Dynamo Table %s", tableName)
-				return true, nil
+		err := json.Unmarshal(content, &tableNames)
+		if err != nil {
+			return false, errors.New(fmt.Sprintf("Unable to serialize aws response.  %s", content))
+		} else {
+			for _, tableName := range tableNames["TableNames"] {
+				if tableName == dynamoTable {
+					log.Printf("Found Dynamo Table %s", tableName)
+					return true, nil
+				}
 			}
 		}
 	}
@@ -82,7 +105,7 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 		return err
 	}
 
-	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+	status, response, err := this.r("http://dynamodb."+this.Region+".amazonaws.com/",
 		string(query[:]), "CreateTable")
 
 	if err != nil {
@@ -90,10 +113,10 @@ func (this *BasicDynamoClient) CreateTable(createTableRequest CreateTableRequest
 		return err
 	}
 
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		content, _ := ioutil.ReadAll(response.Body)
+	if status != 200 {
+		content, _ := ioutil.ReadAll(response)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
@@ -115,7 +138,7 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 		return err
 	}
 
-	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+	status, response, err := this.r("http://dynamodb."+this.Region+".amazonaws.com/",
 		string(query[:]), "UpdateItem")
 
 	if err != nil {
@@ -123,10 +146,10 @@ func (this *BasicDynamoClient) UpdateItem(updateItemRequest UpdateItemRequest) e
 		return err
 	}
 
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		content, _ := ioutil.ReadAll(response.Body)
+	if status != 200 {
+		content, _ := ioutil.ReadAll(response)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
@@ -146,7 +169,7 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 		return nil, err
 	}
 
-	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+	status, response, err := this.r("http://dynamodb."+this.Region+".amazonaws.com/",
 		string(query[:]), "GetItem")
 
 	if err != nil {
@@ -154,16 +177,16 @@ func (this *BasicDynamoClient) GetItem(getItemRequest GetItemRequest) (map[strin
 		return nil, err
 	}
 
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		content, _ := ioutil.ReadAll(response.Body)
+	if status != 200 {
+		content, _ := ioutil.ReadAll(response)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
 		return nil, errors.New("Unable to get item. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := ioutil.ReadAll(response)
 		items := make(map[string]map[string]Attribute)
 		json.Unmarshal(content, &items)
 		if len(items) > 0 {
@@ -185,7 +208,7 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 		return nil, err
 	}
 
-	response, err := this.makeRequest("http://dynamodb."+this.Region+".amazonaws.com/",
+	status, response, err := this.r("http://dynamodb."+this.Region+".amazonaws.com/",
 		string(query[:]), "Scan")
 
 	if err != nil {
@@ -193,16 +216,16 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 		return nil, err
 	}
 
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		content, _ := ioutil.ReadAll(response.Body)
+	if status != 200 {
+		content, _ := ioutil.ReadAll(response)
 		var errorResponse aws.ErrorStruct
 		json.Unmarshal(content, &errorResponse)
 		errorMeter.Mark(1)
 		return nil, errors.New("Unable to scan for items. " + errorResponse.Type + ": " + errorResponse.Message)
 	} else {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := ioutil.ReadAll(response)
 		scanResponse := new(ScanResponse)
 		json.Unmarshal(content, scanResponse)
 
@@ -211,13 +234,13 @@ func (this *BasicDynamoClient) ScanForItems(scanRequest ScanRequest) (*ScanRespo
 
 }
 
-func (this *BasicDynamoClient) makeRequest(host string, query string, action string) (*http.Response, error) {
+func (this *BasicDynamoClient) makeRequest(host string, query string, action string) (int, io.ReadCloser, error) {
 	callMeter, errorMeter := metrics.GetCallMeters("dynamodb.makerequest")
 	callMeter.Mark(1)
 	url_, err := url.Parse(host)
 	if err != nil {
 		errorMeter.Mark(1)
-		return nil, err
+		return 0, nil, err
 	}
 
 	req, err := http.NewRequest("POST", url_.String(), strings.NewReader(query))
@@ -226,5 +249,5 @@ func (this *BasicDynamoClient) makeRequest(host string, query string, action str
 	aws.SignRequest(req, this.UserId, this.UserSecret, "dynamodb", this.Region)
 	response, err := http.DefaultClient.Do(req)
 
-	return response, err
+	return response.StatusCode, response.Body, err
 }
