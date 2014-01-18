@@ -6,7 +6,14 @@ import (
 	"regexp"
 )
 
-type RegisterDeviceView struct {
+//Eventually they will diverge
+type DeviceView model.Device
+
+func ConvertToDeviceView(d model.Device) *DeviceView {
+	return &DeviceView(d)
+}
+
+type DeviceRegisterView struct {
 	userAlias  string
 	deviceType model.DeviceType
 	token      string
@@ -14,51 +21,51 @@ type RegisterDeviceView struct {
 	timezone   string
 }
 
-func NewRegisterDeviceView(userAlias string, dt model.DeviceType, token string, locale string, timezone string) *NewRegisterDeviceView {
-	return &NewRegisterDeviceView{userAlias: userAlias, token: token, locale: locale, timezone: timezone}
+func NewDeviceRegisterView(userAlias string, dt model.DeviceType, token string, locale string, timezone string) *NewRegisterDeviceView {
+	return &NewDeviceRegisterView{userAlias: userAlias, token: token, locale: locale, timezone: timezone}
 }
 
-func (dv RegisterDeviceView) UserAlias() string {
+func (dv DeviceRegisterView) UserAlias() string {
 	return dv.userAlias
 }
 
-func (dv RegisterDeviceView) Locale() string {
+func (dv DeviceRegisterView) Locale() string {
 	return dv.locale
 }
 
-func (dv RegisterDeviceView) DeviceType() model.DeviceType {
+func (dv DeviceRegisterView) DeviceType() model.DeviceType {
 	return dv.deviceType
 }
 
-func (dv RegisterDeviceView) Token() string {
+func (dv DeviceRegisterView) Token() string {
 	return dv.token
 }
 
-func (dv RegisterDeviceView) Timezone() string {
+func (dv DeviceRegisterView) Timezone() string {
 	return dv.timezone
 }
 
-func (dv *RegisterDeviceView) SetUserAlias(id string) {
+func (dv *DeviceRegisterView) SetUserAlias(id string) {
 	dv.userAlias = id
 }
 
-func (dv *RegisterDeviceView) SetLocale(locale string) {
+func (dv *DeviceRegisterView) SetLocale(locale string) {
 	dv.locale = locale
 }
 
-func (dv *RegisterDeviceView) SetTimezone(timezone string) {
+func (dv *DeviceRegisterView) SetTimezone(timezone string) {
 	dv.timezone = timezone
 }
 
-func (dv *RegisterDeviceView) SetDeviceType(dt model.DeviceType) {
+func (dv *DeviceRegisterView) SetDeviceType(dt model.DeviceType) {
 	dv.deviceType = dt
 }
 
-func (dv *RegisterDeviceView) SetToken(token string) {
+func (dv *DeviceRegisterView) SetToken(token string) {
 	dv.token = token
 }
 
-func (dv *RegisterDeviceView) ToDevice() (*model.Device, error) {
+func (dv *DeviceRegisterView) ToDevice() (*model.Device, error) {
 	device := new(model.Device)
 	device.SetUserAlias(dv.userAlias)
 	device.setToken(dv.token)
