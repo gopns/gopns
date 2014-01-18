@@ -9,9 +9,10 @@ import (
 )
 
 type DeviceManager interface {
-	RegisterDevice(device model.Device) (error, int)
-	GetDevice(deviceAlias string) (error, *model.Device)
-	GetDevices(cursor string) (error, *modelview.DeviceList)
+	RegisterDevice(device model.Device) (int, error)
+	GetDevice(deviceId string) (*model.Device, error)
+	ListAppDevices(cursor string) (devices *[]model.Device, newCursor string, err error)
+	PutDevice(device model.Device) error
 }
 
 type DefaultDeviceManager struct {
