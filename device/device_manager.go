@@ -9,7 +9,7 @@ import (
 )
 
 type DeviceManager interface {
-	RegisterDevice(device modelview.DeviceRegistration) (error, int)
+	RegisterDevice(device model.Device) (error, int)
 	GetDevice(deviceAlias string) (error, *model.Device)
 	GetDevices(cursor string) (error, *modelview.DeviceList)
 }

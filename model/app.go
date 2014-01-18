@@ -15,23 +15,32 @@ const (
 )
 
 type App struct {
-	id string
+	id   string
+	name string
 }
 
-func NewApp(id string) (app *App) {
-	return &App{id}
+func NewApp(id string, name string) (app *App) {
+	return &App{id: id, name: name}
 }
 
 func (app App) Id() string {
 	return app.id
 }
 
+func (app App) Name() string {
+	return app.name
+}
+
 func (app *App) SetId(id string) {
 	app.id = id
 }
 
-func NewPlatformApp(appId string, platform Platform, arn string) (*PlatformApp, error) {
-	papp := &PlatformApp{appId: appId, arn: arn}
+func (app *App) SetName(name string) {
+	app.name = name
+}
+
+func NewPlatformApp(id string, appId string, platform Platform, arn string) (*PlatformApp, error) {
+	papp := &PlatformApp{id: id, appId: appId, arn: arn}
 	if err := papp.SetPlatform(platform); err != nil {
 		return nil, err
 	}
@@ -39,9 +48,14 @@ func NewPlatformApp(appId string, platform Platform, arn string) (*PlatformApp, 
 }
 
 type PlatformApp struct {
+	id       string
 	appId    string
 	platform Platform
 	arn      string
+}
+
+func (papp PlatformApp) Id() string {
+	return papp.id
 }
 
 func (papp PlatformApp) AppId() string {
@@ -54,6 +68,10 @@ func (papp PlatformApp) Platform() Platform {
 
 func (papp PlatformApp) Arn() string {
 	return papp.arn
+}
+
+func (papp *PlatformApp) SetId(id string) {
+	papp.id = id
 }
 
 func (papp *PlatformApp) SetAppId(appId string) {
