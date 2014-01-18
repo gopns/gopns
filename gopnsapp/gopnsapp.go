@@ -214,7 +214,7 @@ func (this *GopnsApplication) setupRestServices() {
 	this.WsContainer.Filter(rest.ExceptionFilter)
 
 	//ToDo read the gopns rest root path from config (re: embeddable app)
-	rootPath := "/rest" //without the last slash (e.g., /rest/gopns)
+	rootPath := "/gopns/v1/" //without the last slash (e.g., /rest/gopns)
 
 	restful.DefaultResponseMimeType = restful.MIME_JSON
 
