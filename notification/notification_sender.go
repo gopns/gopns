@@ -49,15 +49,13 @@ func (this *NotificationSender) sendNotification(task NotificationTask) {
 
 	device_ := task.device
 	message := task.message
-	for _, arn := range device_.Arns {
-		callMeter, _ := metrics.GetCallMeters("notification_sender.send_notification")
-		callMeter.Mark(1)
-		this.SnsClient.PublishNotification(
-			arn,
-			message.Title,
-			message.Message,
-			this.PlatformApps[device_.Platform]["Type"])
-	}
+	callMeter, _ := metrics.GetCallMeters("notification_sender.send_notification")
+	callMeter.Mark(1)
+	this.SnsClient.PublishNotification(
+		device_.Arn(),
+		message.Title,
+		message.Message,
+		string(device_.Platform()))
 
 	// send appropriate response code
 	if c := *task.respondTo; c != nil {
