@@ -5,60 +5,57 @@ import (
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/model"
-	"github.com/gopns/gopns/modelview"
 )
 
 type DeviceManager interface {
+	ListAppDevices(appId string, cursor string) (devices *[]model.Device, newCursor string, err error)
 	RegisterDevice(device model.Device) (int, error)
 	GetDevice(deviceId string) (*model.Device, error)
-	ListAppDevices(cursor string) (devices *[]model.Device, newCursor string, err error)
 	PutDevice(device model.Device) error
 }
 
 type DefaultDeviceManager struct {
 	SnsClient    sns.SNSClient
 	DynamoClient dynamodb.DynamoClient
-	PlatformApps map[string]map[string]string
 	DeviceTable  string
 }
 
-func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string,
-	platformApps map[string]map[string]string) DeviceManager {
+func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string) DeviceManager {
 	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,
-		platformApps,
 		deviceTable}
 	return deviceManagerInstance
 }
 
-func (this *DefaultDeviceManager) RegisterDevice(device modelview.DeviceRegistration) (error, int) {
+func (dm *DefaultDeviceManager) ListAppDevices(appId string, cursor string) (devices *[]model.Device, newCursor string, err error) {
+	return nil, "", nil
+}
+
+func (this *DefaultDeviceManager) RegisterDevice(device model.Device) (int, error) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.register_device")
 	callMeter.Mark(1)
 
-	err := model.ValidateLocale(device.Local())
+	err := model.ValidateLocale(device.Locale())
 	if err != nil {
 		errorMeter.Mark(1)
-		return err, 400
+		return 400, err
 	}
 
-	arn, err := this.SnsClient.RegisterDevice(
-		device.Id,
-		formatTags(device.Locale, device.Alias, device.Tags),
-		this.PlatformApps[device.PlatformApp]["Arn"])
+	// TODO dummy app ARN replace by app manager
+	arn, err := this.SnsClient.RegisterDevice(device.Token(), "", "DUMMY APP ARN")
 
 	if err != nil {
 		errorMeter.Mark(1)
-		return err, 400
+		return 400, err
 	}
 
 	key := make(map[string]dynamodb.Attribute)
-	key["alias"] = dynamodb.Attribute{S: device.Alias}
+	key["id"] = dynamodb.Attribute{S: device.Id()}
 	attributeUpdates := make(map[string]dynamodb.AttributeUpdate)
-	attributeUpdates["arns"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: []string{arn}}}
-	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale}}
-	attributeUpdates["tags"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: device.Tags}}
-	attributeUpdates["platform"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.PlatformApp}}
+	attributeUpdates["arn"] = dynamodb.AttributeUpdate{"ADD", dynamodb.Attribute{SS: []string{arn}}}
+	attributeUpdates["locale"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.Locale()}}
+	attributeUpdates["platform"] = dynamodb.AttributeUpdate{"PUT", dynamodb.Attribute{S: device.AppId()}}
 
 	updateItemRequest := dynamodb.UpdateItemRequest{
 		Key:              key,
@@ -68,28 +65,39 @@ func (this *DefaultDeviceManager) RegisterDevice(device modelview.DeviceRegistra
 
 	if err != nil {
 		errorMeter.Mark(1)
-		return err, 500
+		return 500, err
 	}
 
-	return nil, 0
+	return 0, nil
 }
 
-func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (error, *model.Device) {
+func (this *DefaultDeviceManager) GetDevice(deviceAlias string) (*model.Device, error) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.get_device")
 	callMeter.Mark(1)
 	key := make(map[string]dynamodb.Attribute)
+	// ToDo Fix
 	key["alias"] = dynamodb.Attribute{S: deviceAlias}
 	getItemRequest := dynamodb.GetItemRequest{Key: key, TableName: this.DeviceTable}
 
 	item, err := this.DynamoClient.GetItem(getItemRequest)
 	if err == nil {
-		return nil, &model.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
+		d := model.Device{}
+		d.SetUserAlias(item["alias"].S)
+		d.SetLocale(item["locale"].S)
+		d.SetArn(item["arn"].S)
+		d.SetDeviceType(model.DeviceType(item["deviceType"].S))
+		return &d, nil
 	} else {
 		errorMeter.Mark(1)
-		return err, nil
+		return nil, err
 	}
 }
 
+func (dm *DefaultDeviceManager) PutDevice(device model.Device) error {
+	return nil
+}
+
+/*
 func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *model.DeviceList) {
 	callMeter, errorMeter := metrics.GetCallMeters("device_manager.get_devices")
 	callMeter.Mark(1)
@@ -114,13 +122,18 @@ func (this *DefaultDeviceManager) GetDevices(cursor string) (error, *model.Devic
 	}
 
 }
+*/
 
 func convertToDevices(items []map[string]dynamodb.Attribute) []model.Device {
 
 	devices := make([]model.Device, 0, 0)
 	for _, item := range items {
-		device := model.Device{item["alias"].S, item["locale"].S, item["arns"].SS, item["platform"].S, item["tags"].SS}
-		devices = append(devices, device)
+		d := model.Device{}
+		d.SetUserAlias(item["alias"].S)
+		d.SetLocale(item["locale"].S)
+		d.SetArn(item["arn"].S)
+		d.SetDeviceType(model.DeviceType(item["deviceType"].S))
+		devices = append(devices, d)
 	}
 
 	return devices
