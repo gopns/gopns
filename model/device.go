@@ -75,6 +75,17 @@ func (device Device) Timezone() string {
 	return device.timezone
 }
 
+func (device Device) Platform() Platform {
+	if device.deviceType == IOS {
+		return APNS
+	} else if device.deviceType == ANDROID {
+		return GCM
+	} else if device.deviceType == KINDLE {
+		return ADM
+	}
+	return UNKNOWN
+}
+
 func (device *Device) SetId(id string) {
 	device.id = id
 }
