@@ -12,6 +12,7 @@ const (
 	APNS         Platform = "APNS"
 	APNS_SANDBOX Platform = "APNS_SANDBOX"
 	ADM          Platform = "ADM"
+	UNKNOWN      Platform = "UNKNOWN"
 )
 
 type App struct {

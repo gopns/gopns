@@ -31,7 +31,7 @@ func NewDevice(id string, userAlias string, appId string, dt DeviceType, arn str
 	if err := device.SetDeviceType(dt); err != nil {
 		return nil, err
 	}
-	if err = device.SetLocale(locale); err != nil {
+	if err := device.SetLocale(locale); err != nil {
 		return nil, err
 	}
 	//TODO validate
