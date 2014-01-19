@@ -1,16 +1,15 @@
 package modelview
 
 import (
-	"errors"
 	"github.com/gopns/gopns/model"
-	"regexp"
 )
 
 //Eventually they will diverge
 type DeviceView model.Device
 
-func ConvertToDeviceView(d model.Device) *DeviceView {
-	return &DeviceView(d)
+func FromDevice(d model.Device) *DeviceView {
+	dv := DeviceView(d)
+	return &dv
 }
 
 type DeviceRegisterView struct {
@@ -21,8 +20,8 @@ type DeviceRegisterView struct {
 	timezone   string
 }
 
-func NewDeviceRegisterView(userAlias string, dt model.DeviceType, token string, locale string, timezone string) *NewRegisterDeviceView {
-	return &NewDeviceRegisterView{userAlias: userAlias, token: token, locale: locale, timezone: timezone}
+func NewDeviceRegisterView(userAlias string, dt model.DeviceType, token string, locale string, timezone string) *DeviceRegisterView {
+	return &DeviceRegisterView{userAlias: userAlias, token: token, locale: locale, timezone: timezone}
 }
 
 func (dv DeviceRegisterView) UserAlias() string {
@@ -68,8 +67,8 @@ func (dv *DeviceRegisterView) SetToken(token string) {
 func (dv *DeviceRegisterView) ToDevice() (*model.Device, error) {
 	device := new(model.Device)
 	device.SetUserAlias(dv.userAlias)
-	device.setToken(dv.token)
-	device.setTimezone(dv.timezone)
+	device.SetToken(dv.token)
+	device.SetTimezone(dv.timezone)
 	if err := device.SetDeviceType(dv.deviceType); err != nil {
 		return nil, err
 	}
