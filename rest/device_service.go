@@ -5,6 +5,7 @@ import (
 	"github.com/gopns/gopns/device"
 	"github.com/gopns/gopns/exception"
 	"github.com/gopns/gopns/model"
+	"github.com/gopns/gopns/modelview"
 	"log"
 )
 
@@ -20,8 +21,8 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("/").
-		Filter(NewTimingFilter("get-devices")).
-		To(serv.getDevices).
+		Filter(NewTimingFilter("list-devices")).
+		To(serv.listDevices).
 		// docs
 		Doc("list all devices for an app").
 		Param(ws.PathParameter("appId", "the application id").DataType("string")).
@@ -34,7 +35,7 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 		// docs
 		Doc("register a new device").
 		Param(ws.PathParameter("appId", "the application id").DataType("string")).
-		Reads(modelview.RegisterDeviceView{}))
+		Reads(modelview.DeviceRegisterView{}))
 
 	ws.Route(ws.GET("/{deviceId}").
 		Filter(NewTimingFilter("get-device")).
@@ -47,7 +48,7 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 
 	ws.Route(ws.PUT("/{deviceId}").
 		Filter(NewTimingFilter("put-device")).
-		To(serv.addTags).
+		To(serv.updateDevice).
 		// docs
 		Doc("Add tag to device").
 		Param(ws.PathParameter("appId", "the application id").DataType("string")).
@@ -58,63 +59,67 @@ func (serv *DeviceService) Register(container *restful.Container, rootPath strin
 
 func (serv *DeviceService) getDevice(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("deviceId")
-	if id == nil || id == "" {
+	if id == "" {
 		panic(exception.BadRequestException("No device Id specified."))
 	}
 	device, err := serv.DeviceManager.GetDevice(id)
 	exception.ConditionalThrowInternalServerErrorException(err)
 	if device == nil {
-		log.Printf("Device not found for id %s", alias)
+		log.Printf("Device not found for id %s", id)
 		panic(exception.NotFoundException("Device Not Found"))
 	}
 
 	//convert device to device view
-	deviceView := modelview.ConvertToDeviceView(device)
+	deviceView := modelview.FromDevice(*device)
 	response.WriteEntity(*deviceView)
 
 }
 
-func (serv *DeviceService) getDevices(request *restful.Request, response *restful.Response) {
+func (serv *DeviceService) updateDevice(request *restful.Request, response *restful.Response) {
 
-	cursor := request.QueryParameter("cursor")
-
-	err, deviceList := serv.DeviceManager.GetDevices(cursor)
-	exception.ConditionalThrowInternalServerErrorException(err)
-
-	log.Printf("Devices found: %v\n", *deviceList)
-	response.WriteEntity(*deviceList)
-}
-
-func (serv *DeviceService) registerDevice(request *restful.Request, response *restful.Response) {
-
-	deviceR := new(model.DeviceRegistration)
-	err := request.ReadEntity(deviceR)
+	device := new(model.Device)
+	err := request.ReadEntity(device)
 
 	exception.ConditionalThrowBadRequestException(err)
 
 	// ToDo validate device
 
-	err, _ = serv.DeviceManager.RegisterDevice(*deviceR)
+	err = serv.DeviceManager.PutDevice(*device)
 	exception.ConditionalThrowInternalServerErrorException(err)
 
 }
 
-func (serv *DeviceService) addTags(request *restful.Request, response *restful.Response) {
-	panic(exception.NotImplemented("Not Implemented"))
-	return
+func (serv *DeviceService) listDevices(request *restful.Request, response *restful.Response) {
+
+	appId := request.PathParameter("appId")
+	cursor := request.QueryParameter("cursor")
+
+	devices, newCursor, err := serv.DeviceManager.ListAppDevices(appId, cursor)
+	exception.ConditionalThrowInternalServerErrorException(err)
+	log.Printf("Devices found: %v\n", devices)
+
+	paginatedList := modelview.NewPaginatedDeviceListView(*devices, newCursor)
+	response.WriteEntity(*paginatedList)
+}
+
+func (serv *DeviceService) registerDevice(request *restful.Request, response *restful.Response) {
+
+	deviceR := new(modelview.DeviceRegisterView)
+	err := request.ReadEntity(deviceR)
+
+	exception.ConditionalThrowBadRequestException(err)
+
+	dv, err := deviceR.ToDevice()
+	exception.ConditionalThrowBadRequestException(err)
+
+	// ToDo validate device
+
+	_, err = serv.DeviceManager.RegisterDevice(*dv)
+	exception.ConditionalThrowInternalServerErrorException(err)
+
 }
 
 func (serv *DeviceService) deleteDevice(request *restful.Request, response *restful.Response) {
-	panic(exception.NotImplemented("Not Implemented"))
-	return
-}
-
-func (serv *DeviceService) deleteTag(request *restful.Request, response *restful.Response) {
-	panic(exception.NotImplemented("Not Implemented"))
-	return
-}
-
-func (serv *DeviceService) deleteArn(request *restful.Request, response *restful.Response) {
 	panic(exception.NotImplemented("Not Implemented"))
 	return
 }

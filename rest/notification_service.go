@@ -45,7 +45,7 @@ func (serv *NotificationService) Register(container *restful.Container, rootPath
 func (serv *NotificationService) sendPushNotification(request *restful.Request, response *restful.Response) {
 
 	alias := request.PathParameter("deviceAlias")
-	err, device_ := serv.DeviceManager.GetDevice(alias)
+	device_, err := serv.DeviceManager.GetDevice(alias)
 	exception.ConditionalThrowInternalServerErrorException(err)
 	if device_ == nil {
 		panic(exception.NotFoundException("Message Invalid"))
