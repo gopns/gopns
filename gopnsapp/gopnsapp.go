@@ -2,16 +2,15 @@ package gopnsapp
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/gopns/gopns/access"
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
-	"github.com/gopns/gopns/device"
 	config "github.com/gopns/gopns/gopnsconfig"
 	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/notification"
-	"github.com/gopns/gopns/rest"
-	//"github.com/gopns/gopns/rest/restutil"
 	"github.com/gopns/gopns/pool"
+	"github.com/gopns/gopns/rest"
 	"log"
 	"net/http"
 	"runtime"
@@ -32,7 +31,7 @@ type GopnsApplication struct {
 	AppMode              config.APPLICATION_MODE
 	BaseConfig           config.BaseConfig
 	AWSConfig            config.AWSConfig
-	DeviceManager        device.DeviceManager
+	DeviceManager        access.DeviceManager
 	WsContainer          restful.Container
 }
 
@@ -75,7 +74,7 @@ func New() (GopnsApp, error) {
 		&gopnasapp_.NotificationSender)
 
 	//create a device manager
-	gopnasapp_.DeviceManager = device.New(
+	gopnasapp_.DeviceManager = access.NewDevice(
 		gopnasapp_.SNSClient,
 		gopnasapp_.DynamoClient,
 		gopnasapp_.AWSConfig.DynamoTable())

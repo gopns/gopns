@@ -2,7 +2,7 @@ package rest
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/access"
 	"github.com/gopns/gopns/exception"
 	"github.com/gopns/gopns/model"
 	"github.com/gopns/gopns/modelview"
@@ -10,7 +10,7 @@ import (
 )
 
 type DeviceService struct {
-	DeviceManager device.DeviceManager
+	DeviceManager access.DeviceManager
 }
 
 func (serv *DeviceService) Register(container *restful.Container, rootPath string) {

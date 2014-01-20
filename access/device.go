@@ -1,4 +1,4 @@
-package device
+package access
 
 import (
 	"github.com/gopns/gopns/aws/dynamodb"
@@ -20,7 +20,7 @@ type DefaultDeviceManager struct {
 	DeviceTable  string
 }
 
-func New(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string) DeviceManager {
+func NewDevice(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string) DeviceManager {
 	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,

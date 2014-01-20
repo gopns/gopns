@@ -2,14 +2,14 @@ package rest
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/gopns/gopns/device"
+	"github.com/gopns/gopns/access"
 	"github.com/gopns/gopns/exception"
 	"github.com/gopns/gopns/notification"
 )
 
 type NotificationService struct {
 	NotificationSender *notification.NotificationSender
-	DeviceManager      device.DeviceManager
+	DeviceManager      access.DeviceManager
 }
 
 func (serv *NotificationService) Register(container *restful.Container, rootPath string) {

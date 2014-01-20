@@ -16,28 +16,30 @@ const (
 )
 
 type App struct {
-	id   string
-	name string
+	id          string
+	description string
+	createdAt   string
+	updatedAt   string
 }
 
-func NewApp(id string, name string) (app *App) {
-	return &App{id: id, name: name}
+func NewApp(id string, desc string) (app *App) {
+	return &App{id: id, description: desc}
 }
 
 func (app App) Id() string {
 	return app.id
 }
 
-func (app App) Name() string {
-	return app.name
+func (app App) Description() string {
+	return app.description
 }
 
 func (app *App) SetId(id string) {
 	app.id = id
 }
 
-func (app *App) SetName(name string) {
-	app.name = name
+func (app *App) SetDescription(desc string) {
+	app.description = desc
 }
 
 func NewPlatformApp(id string, appId string, platform Platform, arn string) (*PlatformApp, error) {
@@ -49,10 +51,16 @@ func NewPlatformApp(id string, appId string, platform Platform, arn string) (*Pl
 }
 
 type PlatformApp struct {
-	id       string
-	appId    string
-	platform Platform
-	arn      string
+	id              string
+	name            string
+	appId           string
+	platform        Platform
+	arn             string
+	admClientId     string
+	admClientSecret string
+	apnsCertificate string
+	apnsPrivateKey  string
+	gcmApiKey       string
 }
 
 func (papp PlatformApp) Id() string {
