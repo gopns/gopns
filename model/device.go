@@ -15,19 +15,20 @@ const (
 
 //TODO: constants for locale and timezone
 type Device struct {
-	id         string
-	userAlias  string
-	appId      string
-	deviceType DeviceType
-	arn        string
-	token      string
-	locale     string
-	timezone   string
-	enabled    bool
+	id         		string
+	userAlias  		string
+	appId      		string
+	platformAppId 	string
+	deviceType 		DeviceType
+	arn        		string
+	token      		string
+	locale     		string
+	timezone   		string
+	enabled    		bool
 }
 
-func NewDevice(id string, userAlias string, appId string, dt DeviceType, arn string, token string, locale string, timezone string, enabled bool) (*Device, error) {
-	device := &Device{id: id, userAlias: userAlias, appId: appId, arn: arn, token: token, enabled: enabled}
+func NewDevice(id string, userAlias string, appId string, pappId string, dt DeviceType, arn string, token string, locale string, timezone string, enabled bool) (*Device, error) {
+	device := &Device{id: id, userAlias: userAlias, appId: appId, platformAppId: pappId, arn: arn, token: token, enabled: enabled}
 	if err := device.SetDeviceType(dt); err != nil {
 		return nil, err
 	}
@@ -49,6 +50,10 @@ func (device Device) UserAlias() string {
 
 func (device Device) AppId() string {
 	return device.appId
+}
+
+func (device Device) PlatformAppId() string {
+	return device.platformAppId
 }
 
 func (device Device) Locale() string {
@@ -96,6 +101,10 @@ func (device *Device) SetUserAlias(id string) {
 
 func (device *Device) SetAppId(id string) {
 	device.appId = id
+}
+
+func (device *Device) SetPlatformAppId(papp string) {
+	device.platformAppId = papp
 }
 
 func (device *Device) SetLocale(locale string) error {
