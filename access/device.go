@@ -20,7 +20,7 @@ type DefaultDeviceManager struct {
 	DeviceTable  string
 }
 
-func NewDevice(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string) DeviceManager {
+func NewDeviceManager(snsClient sns.SNSClient, dynamoClient dynamodb.DynamoClient, deviceTable string) DeviceManager {
 	deviceManagerInstance := &DefaultDeviceManager{
 		snsClient,
 		dynamoClient,

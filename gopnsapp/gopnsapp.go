@@ -74,7 +74,7 @@ func New() (GopnsApp, error) {
 		&gopnasapp_.NotificationSender)
 
 	//create a device manager
-	gopnasapp_.DeviceManager = access.NewDevice(
+	gopnasapp_.DeviceManager = access.NewDeviceManager(
 		gopnasapp_.SNSClient,
 		gopnasapp_.DynamoClient,
 		gopnasapp_.AWSConfig.DynamoTable())
