@@ -3,23 +3,27 @@ package gopnsconfig
 var awsConfigInstance AWSConfig
 
 type AWSConfigStruct struct {
-	UserIDValue               string
-	UserSecretValue           string
+	awsAccessKeyId               string
+	awsSecretKey           		 string
+	region					 string
 	PlatformAppsValue         map[string]PlatformApp
 	DynamoTableValue          string
-	RegionValue               string
 	InitialReadCapacityValue  int
 	InitialWriteCapacityValue int
 	SqsQueueNameValue         string
 	SqsQueueUrlValue          string
 }
 
-func (this *AWSConfigStruct) UserID() string {
-	return this.UserIDValue
+func (this *AWSConfigStruct) AwsAccessKeyId() string {
+	return this.awsAccessKeyId
 }
 
-func (this *AWSConfigStruct) UserSecret() string {
-	return this.UserSecretValue
+func (this *AWSConfigStruct) AwsSecretKey() string {
+	return this.awsSecretKey
+}
+
+func (this *AWSConfigStruct) Region() string {
+	return this.region
 }
 
 func (this *AWSConfigStruct) PlatformApps() map[string]PlatformApp {
@@ -38,9 +42,7 @@ func (this *AWSConfigStruct) DynamoTable() string {
 	return this.DynamoTableValue
 }
 
-func (this *AWSConfigStruct) Region() string {
-	return this.RegionValue
-}
+
 
 func (this *AWSConfigStruct) InitialReadCapacity() int {
 	return this.InitialReadCapacityValue
@@ -63,12 +65,12 @@ func (this *AWSConfigStruct) SetSqsQueueUrl(queueUrl string) {
 }
 
 type AWSConfig interface {
-	UserID() string
-	UserSecret() string
+	AwsAccessKeyId() string
+	AwsSecretKey() string
+	Region() string
 	PlatformApps() map[string]PlatformApp
 	PlatformAppsMap() map[string]map[string]string
 	DynamoTable() string
-	Region() string
 	InitialReadCapacity() int
 	InitialWriteCapacity() int
 	SqsQueueName() string
@@ -77,17 +79,17 @@ type AWSConfig interface {
 }
 
 func parseAwsConfig(awsConfig *ConfigFile) AWSConfig {
-	userId, err := awsConfig.GetString("default", "id")
-	checkError("Unable to find AWS User ID", err)
+	awsAccessKeyId, err := awsConfig.GetString("default", "aws_access_key_id")
+	checkError("Unable to find AWS Access Key ID (aws_access_key_id)", err)
 
-	userSecret, err := awsConfig.GetString("default", "secret")
-	checkError("Unable to find AWS User Secret", err)
-
-	dynamoTableValue, err := awsConfig.GetString("default", "dynamo-table")
-	checkError("Unable to find AWS Dynamo Table", err)
+	awsSecretKey, err := awsConfig.GetString("default", "aws_access_key_secret")
+	checkError("Unable to find AWS access key secret (aws_access_key_secret", err)
 
 	region, err := awsConfig.GetString("default", "region")
 	checkError("Unable to find AWS region", err)
+
+	dynamoTableValue, err := awsConfig.GetString("default", "dynamo-table")
+	checkError("Unable to find AWS Dynamo Table", err)
 
 	readCapacity, err := awsConfig.GetInt64("default", "dynamo-read-capacity")
 	checkError("Unable to find AWS dynamo-read-capacity", err)
@@ -99,11 +101,11 @@ func parseAwsConfig(awsConfig *ConfigFile) AWSConfig {
 	checkError("Unable to find AWS sqs-queue-name", err)
 
 	awsConfigInstance := &AWSConfigStruct{
-		userId,
-		userSecret,
+		awsAccessKeyId,
+		awsSecretKey,
+		region,		
 		parsePlatformAppConfig(awsConfig),
 		dynamoTableValue,
-		region,
 		int(readCapacity),
 		int(writeCapacity),
 		sqsQueueName,

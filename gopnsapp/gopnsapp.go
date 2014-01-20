@@ -3,6 +3,8 @@ package gopnsapp
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/access"
+	"github.com/crowdmob/goamz/aws"
+	dynamo "github.com/crowdmob/goamz/dynamodb"
 	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
@@ -15,6 +17,7 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+	"errors"
 )
 
 type GopnsApp interface {
@@ -111,11 +114,19 @@ func (this *GopnsApplication) Start() error {
 }
 
 func (this *GopnsApplication) setupDynamoDB() error {
+
 	var err error
-	this.DynamoClient, err = dynamodb.New(
-		this.AWSConfig.UserID(),
-		this.AWSConfig.UserSecret(),
-		this.AWSConfig.Region())
+
+	awsAuth := new(aws.Auth)
+	awsAuth.AccessKey = this.AWSConfig.AwsAccessKeyId()
+	awsAuth.SecretKey = this.AWSConfig.AwsSecretKey()
+
+	awsRegion, ok := aws.Regions[this.AWSConfig.Region()]
+	if !ok {
+		err = errors.New("Invalid AWS region value specified.")
+	}
+
+	_ = dynamo.Server{ Auth: *awsAuth, Region: awsRegion }
 
 	if err != nil {
 		return err
@@ -143,8 +154,8 @@ func (this *GopnsApplication) setupDynamoDB() error {
 func (this *GopnsApplication) setupSQS() error {
 	var err error
 	this.SQSClient = sqs.New(
-		this.AWSConfig.UserID(),
-		this.AWSConfig.UserSecret(),
+		this.AWSConfig.AwsAccessKeyId(),
+		this.AWSConfig.AwsSecretKey(),
 		this.AWSConfig.Region())
 
 	if sqsQueue, err := this.SQSClient.CreateQueue(this.AWSConfig.SqsQueueName()); err != nil {
@@ -160,8 +171,8 @@ func (this *GopnsApplication) setupSQS() error {
 func (this *GopnsApplication) setupSNS() error {
 	var err error
 	this.SNSClient, err = sns.New(
-		this.AWSConfig.UserID(),
-		this.AWSConfig.UserSecret(),
+		this.AWSConfig.AwsAccessKeyId(),
+		this.AWSConfig.AwsSecretKey(),
 		this.AWSConfig.Region())
 
 	if err != nil {
