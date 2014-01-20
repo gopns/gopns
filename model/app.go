@@ -79,6 +79,27 @@ func (papp PlatformApp) Arn() string {
 	return papp.arn
 }
 
+
+func (papp PlatformApp) AdmClientId() string {
+	return papp.admClientId
+}
+
+func (papp PlatformApp) AdmClientSecret() string {
+	return papp.admClientSecret
+}
+
+func (papp PlatformApp) ApnsCertificate() string {
+	return papp.apnsCertificate
+}
+
+func (papp PlatformApp) ApnsPrivateKey() string {
+	return papp.apnsPrivateKey
+}
+
+func (papp PlatformApp) GcmApiKey() string {
+	return papp.gcmApiKey
+}
+
 func (papp *PlatformApp) SetId(id string) {
 	papp.id = id
 }
@@ -98,6 +119,26 @@ func (papp *PlatformApp) SetPlatform(p Platform) error {
 
 func (papp *PlatformApp) SetArn(arn string) {
 	papp.arn = arn
+}
+
+func (papp *PlatformApp) SetAdmClientId(admCid string) {
+	papp.admClientId = admCid
+}
+
+func (papp *PlatformApp) SetAdmClientSecret(admSecret string) {
+	papp.admClientSecret = admSecret
+}
+
+func (papp *PlatformApp) SetApnsCertificate(apnsCertificate string) {
+	papp.apnsCertificate = apnsCertificate
+}
+
+func (papp *PlatformApp) SetApnsPrivateKey(apnsPrivateKey string) {
+	papp.apnsPrivateKey = apnsPrivateKey
+}
+
+func (papp *PlatformApp) SetGcmApiKey(gcmApiKey string) {
+	papp.gcmApiKey = gcmApiKey
 }
 
 var platformRegex = regexp.MustCompile("^(" + string(GCM) + "|" + string(ADM) + "|" + string(APNS) + "|" + string(APNS_SANDBOX) + ")$")
