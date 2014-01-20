@@ -4,7 +4,7 @@ import (
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/metrics"
 	"github.com/gopns/gopns/model"
-	"github.com/stefantalpalaru/pool"
+	"github.com/gopns/gopns/pool"
 	"time"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/gopns/gopns/notification"
 	"github.com/gopns/gopns/rest"
 	//"github.com/gopns/gopns/rest/restutil"
-	"github.com/stefantalpalaru/pool"
+	"github.com/gopns/gopns/pool"
 	"log"
 	"net/http"
 	"runtime"
