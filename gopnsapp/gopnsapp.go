@@ -1,11 +1,11 @@
 package gopnsapp
 
 import (
+	"errors"
+	"github.com/crowdmob/goamz/aws"
+	"github.com/crowdmob/goamz/dynamodb"
 	"github.com/emicklei/go-restful"
 	"github.com/gopns/gopns/access"
-	"github.com/crowdmob/goamz/aws"
-	dynamo "github.com/crowdmob/goamz/dynamodb"
-	"github.com/gopns/gopns/aws/dynamodb"
 	"github.com/gopns/gopns/aws/sns"
 	"github.com/gopns/gopns/aws/sqs"
 	config "github.com/gopns/gopns/gopnsconfig"
@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"runtime"
 	"time"
-	"errors"
 )
 
 type GopnsApp interface {
@@ -120,13 +119,12 @@ func (this *GopnsApplication) setupDynamoDB() error {
 	awsAuth := new(aws.Auth)
 	awsAuth.AccessKey = this.AWSConfig.AwsAccessKeyId()
 	awsAuth.SecretKey = this.AWSConfig.AwsSecretKey()
-
 	awsRegion, ok := aws.Regions[this.AWSConfig.Region()]
 	if !ok {
 		err = errors.New("Invalid AWS region value specified.")
 	}
 
-	_ = dynamo.Server{ Auth: *awsAuth, Region: awsRegion }
+	_ = dynamo.Server{Auth: *awsAuth, Region: awsRegion}
 
 	if err != nil {
 		return err
