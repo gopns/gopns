@@ -11,6 +11,10 @@ install:
 - go install code.google.com/p/gorest
 - go get github.com/emicklei/go-restful
 - go install github.com/emicklei/go-restful
+- go get github.com/bitly/go-simplejson
+- go install github.com/bitly/go-simplejson
+- go get github.com/crowdmob/goamz/aws
+- go install github.com/crowdmob/goamz/aws
 - go install github.com/gopns/gopns
 
 
